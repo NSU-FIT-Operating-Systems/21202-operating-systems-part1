@@ -10,7 +10,7 @@ EXECUTABLE=hello
 SOURCES=hello.c
 OBJECTS=$(SOURCES:.c=.o)
 
-all: addToPath run
+all: run
 
 dynamic: $(DYNAMIC_SRC)
 	$(CC) $(DYNFLAGS) $(DYNAMIC_SRC) -o $(DYNAMIC_OBJ)
