@@ -27,5 +27,3 @@ clean:
 run: $(EXECUTABLE)
 	./$(EXECUTABLE)
 	
-addToPath:
-	export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
