@@ -3,7 +3,7 @@
 echo "https://pvoid.pro/index.php/articles/41-dl-libraries"
 
 echo "================ Создание динамической библиотеки ================"
-gcc -c -fPIC hello_shared.c -o hello_shared.o
+gcc -c -lshared -fPIC hello_shared.c -o hello_shared.o
 gcc -shared -o libhello_shared.so hello_shared.o
 
 echo "================ Получение исполняемого файла ================"

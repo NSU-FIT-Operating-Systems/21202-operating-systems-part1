@@ -18,6 +18,3 @@ cat dependencies.txt
 
 echo "================ Запуск исполняемого файла ================"
 ./hello.o
-
-echo -e "\n================ Powered by... ================"
-cat ./script.sh
