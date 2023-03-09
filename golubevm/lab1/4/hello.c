@@ -14,6 +14,7 @@ int main(int argc, char* argv[]){
 	
 	if (!handle) {
         fprintf(stderr, "Error: %s\n", dlerror());
+		dlclose(handle);
         return EXIT_FAILURE;
     }
 	
@@ -23,6 +24,7 @@ int main(int argc, char* argv[]){
 	
 	if (error != NULL) {
 		fprintf(stderr, "Error: %s\n", error);
+		dlclose(handle);
 		return EXIT_FAILURE;
 	}
 	hello_dyn();	

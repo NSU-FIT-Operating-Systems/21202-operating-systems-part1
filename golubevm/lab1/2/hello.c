@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include <stdio.h>
 #include "hello_static.h"
 
 int main(int argc, char* argv[]) {

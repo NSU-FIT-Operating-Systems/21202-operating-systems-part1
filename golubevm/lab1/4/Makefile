@@ -23,5 +23,3 @@ run: all
 clean:
 	rm -rf *.o *.so $(EXECUTABLE) 
 	
-	
-	
