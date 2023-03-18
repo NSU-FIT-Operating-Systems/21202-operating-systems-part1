@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 void reverse_string(char *str) {
-    int len = strlen_s(str);
+    int len = strlen(str);
     for (int i = 0, j = len - 1; i < j; i++, j--) {
         char temp = str[i];
         str[i] = str[j];
@@ -21,65 +21,63 @@ void reverse_file(char *filename) {
     }
     fseek(fp, 0, SEEK_END);
     int fileSize = ftell(fp);
-    char *buffer = (char *) malloc(file_size);
+    char *buffer = (char *) malloc(fileSize);
     fseek(fp, 0, SEEK_SET);
-    fread(buffer, sizeof(char), file_size, fp);
+    fread(buffer, sizeof(char), fileSize, fp);
     reverse_string(buffer);
     fseek(fp, 0, SEEK_SET);
-    fwrite(buffer, sizeof(char), file_size, fp);
+    fwrite(buffer, sizeof(char), fileSize, fp);
     fclose(fp);
     free(buffer);
 }
 
-void copy_directory(char *src_dir, char *dst_dir) {
+void copy_directory(char *srcDir, char *dstDir) {
     struct dirent *entry;
-    DIR *dir = opendir(src_dir);
+    DIR *dir = opendir(srcDir);
     if (dir == NULL) {
         perror("Error opening directory");
         return;
     }
-    mkdir(dst_dir, 0777);
+    mkdir(dstDir, 0777);
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_REG) {
-            char *src_file = (char *) malloc(strlen(src_dir) + strlen(entry->d_name) + 2);
-            sprintf(src_file, "%s/%s", src_dir, entry->d_name);
-            char *dst_file = (char *) malloc(strlen(dst_dir) + strlen(entry->d_name) + 2);
-            sprintf(dst_file, "%s/%s", dst_dir, entry->d_name);
-            reverse_string(dst_file);
-            reverse_file(src_file);
-            FILE *src_fp = fopen(src_file, "rb");
-            FILE *dst_fp = fopen(dst_file, "wb");
-            if (src_fp == NULL || dst_fp == NULL) {
+            char *srcFile = (char *) malloc(strlen(srcDir) + strlen(entry->d_name) + 2);
+            sprintf(srcFile, "%s/%s", srcDir, entry->d_name);   
+            char *dstFile = (char *) malloc(strlen(dstDir) + strlen(entry->d_name) + 2);
+            sprintf(dstFile, "%s/%s", dstDir, entry->d_name);
+            reverse_string(dstFile);
+            reverse_file(srcFile);
+            FILE *srcFp = fopen(srcFile, "rb");
+            FILE *dstFp = fopen(dstFile, "wb");
+            if (srcFp == NULL || dstFp == NULL) {
                 perror("Error opening file");
                 return;
             }
-            fseek(src_fp, 0, SEEK_END);
-            int file_size = ftell(src_fp);
-            char *buffer = (char *) malloc(file_size);
-            fseek(src_fp, 0, SEEK_SET);
-            fread(buffer, sizeof(char), file_size, src_fp);
-            int i, j;
-            char temp;
-            for (i = 0, j = file_size - 1; i < j; i++, j--) {
-                temp = buffer[i];
+            fseek(srcFp, 0, SEEK_END);
+            int fileSize = ftell(srcFp);
+            char *buffer = (char *) malloc(fileSize);
+            fseek(srcFp, 0, SEEK_SET);
+            fread(buffer, sizeof(char), fileSize, srcFp);
+            for (int i = 0, j = fileSize - 1; i < j; i++, j--) {
+                char temp = buffer[i];
                 buffer[i] = buffer[j];
                 buffer[j] = temp;
             }
-            fwrite(buffer, sizeof(char), file_size, dst_fp);
-            fclose(src_fp);
-            fclose(dst_fp);
-            free(src_file);
-            free(dst_file);
+            fwrite(buffer, sizeof(char), fileSize, dstFp);
+            fclose(srcFp);
+            fclose(dstFp);
+            free(srcFile);
+            free(dstFile);
             free(buffer);
         } else if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-            char *src_subdir = (char *) malloc(strlen(src_dir) + strlen(entry->d_name) + 2);
-            sprintf(src_subdir, "%s/%s", src_dir, entry->d_name);
-            char *dst_subdir = (char *) malloc(strlen(dst_dir) + strlen(entry->d_name) + 2);
-            sprintf(dst_subdir, "%s/%s", dst_dir, entry->d_name);
-            reverse_string(dst_subdir);
-            copy_directory(src_subdir, dst_subdir);
-            free(src_subdir);
-            free(dst_subdir);
+            char *srcSubdir = (char *) malloc(strlen(srcDir) + strlen(entry->d_name) + 2);
+            sprintf(srcSubdir, "%s/%s", srcDir, entry->d_name);
+            char *dstSubdir = (char *) malloc(strlen(dstDir) + strlen(entry->d_name) + 2);
+            sprintf(dstSubdir, "%s/%s", dstDir, entry->d_name);
+            reverse_string(dstSubdir);
+            copy_directory(srcSubdir, dstSubdir);
+            free(srcSubdir);
+            free(dstSubdir);
         }
     }
     closedir(dir);
@@ -90,11 +88,11 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s <directory>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    char *src_dir = argv[1];
-    char *dst_dir = (char *) malloc(strlen(src_dir) + 1);
-    strcpy(dst_dir, src_dir);
-    reverse_string(dst_dir);
-    copy_directory(src_dir, dst_dir);
-    free(dst_dir);
+    char *srcDir = argv[1];
+    char *dstDir = (char *) malloc(strlen(srcDir));
+    strcpy(dstDir, srcDir);
+    reverse_string(dstDir);
+    copy_directory(srcDir, dstDir);
+    free(dstDir);
     return 0;
 }
