@@ -4,6 +4,7 @@
 void load_lib_and_run_func() {
     void *handle;  // opaque handle
     handle = dlopen("./libhello_shared.so", RTLD_LAZY);  // открываем библиотеку. lazy значит че-то делаем только тогда, когда надо
+    printf("%d %d %d %d %d %d %d ", RTLD_LAZY, RTLD_NOW, RTLD_GLOBAL, RTLD_LOCAL, RTLD_NODELETE, RTLD_NOLOAD,RTLD_DEEPBIND);
     if (handle == NULL) {
         printf("dlopen failed (1): %s\n", dlerror());
         return;

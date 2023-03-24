@@ -15,20 +15,20 @@
 0000000000003da8 d _DYNAMIC
 0000000000004010 D _edata
 0000000000004018 B _end
-00000000000012a8 T _fini
+00000000000012d4 T _fini
 00000000000011c0 t frame_dummy
 0000000000003d98 d __frame_dummy_init_array_entry
-0000000000002168 r __FRAME_END__
+0000000000002178 r __FRAME_END__
 0000000000003f98 d _GLOBAL_OFFSET_TABLE_
                  w __gmon_start__
-0000000000002060 r __GNU_EH_FRAME_HDR
+0000000000002074 r __GNU_EH_FRAME_HDR
 0000000000001000 T _init
 0000000000002000 R _IO_stdin_used
                  w _ITM_deregisterTMCloneTable
                  w _ITM_registerTMCloneTable
                  U __libc_start_main@GLIBC_2.34
 00000000000011c9 T load_lib_and_run_func
-000000000000128f T main
+00000000000012ba T main
                  U printf@GLIBC_2.2.5
 0000000000001140 t register_tm_clones
 00000000000010e0 T _start
