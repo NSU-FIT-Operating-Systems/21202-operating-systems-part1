@@ -5,41 +5,65 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
-#define MKD 926766319
-#define LSD 2431885709
-#define RMD 3955155456
-#define CRT 3551601661
-#define FPRINT 1280254760
-#define RMF 1570162098
-#define SMLK 4000955435
-#define SMLPRINT 66014203
-#define HRDLK 1938404124
-
-
-unsigned int HashFAQ6(const char * str);
-int getId(char* str);
 int checkArgsNumber(int argc, int requiered);
-void printError(const char* msg);
+char *getName(char* str);
 
 int mkd(const char* filename);
 int lsd(const char* filename);
 int rmd(const char* filename);
 int crt(const char* filename);
 int fprint(const char* filename);
-
-void print(char* str, unsigned int hash) {
-	printf("#define %s %u\n", str, hash);
-}
+int rmf(const char* filename);
+int smlk(const char* filename, const char* target);
+int smlprint(const char* filename);
+int hrdlk(const char* oldpath, const char* newpath);
+int fstt(const char* filename);
+int chmd(const char* filename, int mode);
 
 int main(int argc, char* argv[]) {
 	if (checkArgsNumber(argc, 1) < 0) {
-		fprintf(stderr, "Not enough arguments. Try to pass filepath\n");
+		fprintf(stderr, "Not enough arguments. At least one requiered\n");
 		return -1;
 	}
-	fprint(argv[1]);
+	char* fun = getName(argv[0]);
+	char* arg1 = argv[1];
+	int res = 0;
 
-	return 0;
+	if (strcmp(fun, "mkd") == 0) {
+		res = mkd(arg1);
+	} else if (strcmp(fun, "lsd") == 0) {
+		res = lsd(arg1);
+	} else if (strcmp(fun, "rmd") == 0) {
+		res = rmd(arg1);
+	} else if (strcmp(fun, "crt") == 0) {
+		res = crt(arg1);
+	} else if (strcmp(fun, "fprint") == 0) {
+		res = fprint(arg1);
+	} else if (strcmp(fun, "rmf") == 0) {
+		res = rmf(arg1);
+	} else if (strcmp(fun, "smlk") == 0) {
+		if (checkArgsNumber(argc, 2) < 0) {
+			fprintf(stderr, "Not enough arguments. Two args requiered\n");
+			return -1;
+		}
+		res = smlk(arg1, argv[2]);
+	} else if (strcmp(fun, "smlprint") == 0) {
+		res = smlprint(arg1);
+	} else if (strcmp(fun, "hrdlk") == 0) {
+		if (checkArgsNumber(argc, 2) < 0) {
+			fprintf(stderr, "Not enough arguments. Two args requiered\n");
+			return -1;
+		}
+		res = hrdlk(arg1, argv[2]);
+	} else if (strcmp(fun, "fstt") == 0) {
+		res = fstt(arg1);
+	} else if (strcmp(fun, "chmd") == 0) {
+		res = chmd(arg1, atoi(argv[2]));
+	}
+
+	return res;
 }
 
 int mkd(const char* filename) {
@@ -55,7 +79,6 @@ int lsd(const char* filename) {
 	dir = opendir(filename);
 	if (!dir) {
 		perror("Cannot open dir");
-		closedir(dir);
 		return -1;
 	}
 	struct dirent* entry; 
@@ -63,6 +86,7 @@ int lsd(const char* filename) {
 		printf("%s\n", entry->d_name);
 	}
 	closedir(dir);
+	return 0;
 }
 
 int rmd(const char* filename) {
@@ -102,6 +126,78 @@ int fprint(const char* filename) {
 }
 
 
+int rmf(const char* filename) {
+	if (unlink(filename) < 0) {
+		perror("Cannot remove file");
+		return -1;
+	}
+	return 0;
+}
+
+int smlk(const char* filename, const char* target) {
+	if (symlink(filename, target) < 0) {
+		perror("Cannot create symlink");
+		return -1;
+	}
+	return 0;
+}
+
+int smlprint(const char* filename) {
+	const int SIZE = 256;
+	char buf[SIZE];
+	int rd = readlink(filename, buf, SIZE);
+	if (rd < 0) {
+		perror("Cannot read symlink");
+		return -1;
+	}
+	write(1,buf,rd);
+	write(1,"\n",1);
+	return 0;
+}
+
+int hrdlk(const char* oldpath, const char* newpath) {
+	if (link(oldpath, newpath) < 0) {
+		perror("Cannot create hardlink");
+		return -1;
+	}
+	return 0;
+}
+
+int fstt(const char* filename) {
+	struct stat fileStat;
+	if(stat(filename, &fileStat) < 0)    
+	       return -1;
+
+	   printf("Information for %s\n", filename);
+	   printf("---------------------------\n");
+	   printf("File Size: \t\t%ld bytes\n", fileStat.st_size);
+	   printf("Number of Links: \t%ld\n", fileStat.st_nlink);
+	   printf("File inode: \t\t%ld\n", fileStat.st_ino);
+
+	   printf("File Permissions: \t");
+	   printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+	   printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+	   printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+	   printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+	   printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+	   printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+	   printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+	   printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+	   printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+	   printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+	   printf("\n\n");
+
+	   printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
+}
+
+int chmd(const char* filename, int mode) {
+	if (chmod(filename, mode) < 0) {
+		perror("Cannot change permissions");
+		return -1;
+	}
+	return 0;
+}
+
 
 
 int checkArgsNumber(int argc, int requiered) {
@@ -110,24 +206,7 @@ int checkArgsNumber(int argc, int requiered) {
 	return 0;
 }
 
-unsigned int HashFAQ6(const char * str) {
-
-    unsigned int hash = 0;
-
-    for (; *str; str++)
-    {
-        hash += (unsigned char)(*str);
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-
-    return hash;
-}
-
-int getId(char* str) {
+char *getName(char* str) {
 	size_t size = strlen(str);
 	char * start_ptr = str;
 	for (int i = size - 1; i >= 0; i--) {
@@ -136,13 +215,5 @@ int getId(char* str) {
 			break;
 		}
 	}
-	unsigned int hash = HashFAQ6(start_ptr);
-	if (hash == MKD)
-		return 1;
-	if (hash == LSD) 
-		return 2;
-	if (hash == RMD)
-		return 3;
-	return -1;
+	return start_ptr;
 }
-
