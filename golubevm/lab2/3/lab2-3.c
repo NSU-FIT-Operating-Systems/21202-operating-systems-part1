@@ -21,10 +21,18 @@ void traceChildProcess(pid_t child);
 void initArgsList(char *args[], int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    fprintf(stderr, "Not enough arguments. Required at least one\n");
+    return -1;
+  }
   pid_t child;
   char *argsList[argc];
   initArgsList(argsList, argc, argv);
   child = fork();
+  if (child == -1) {
+    perror("Cannot create child process");
+    return -1;
+  }
   if (child) {
     traceChildProcess(child);
   } else {
