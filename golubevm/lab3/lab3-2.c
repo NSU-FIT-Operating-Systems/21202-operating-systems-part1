@@ -7,6 +7,53 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+/*
+  how to use it:
+  [command] [args]
+  where command is command from the list below.
+
+  To use this programm you need to compile it and create
+  hard links to compiled file with proper name. Or you 
+  can use Makefile to build all components.
+
+  Commands:
+  	mkd:
+  		mkd dirname
+  		Creates new directory.
+  	lsd:
+  		lsd dirname
+  		Prints all files contained in quered directory.
+  	rmd:
+  		rmd dirname
+  		Remove directory.
+  	crt:
+  		crt filename
+  		Creates a regular file.
+  	fprint:
+  		fprint filename
+  		Print all data contained in file to stdout. If you
+  		apply this command to symlink it will show content of file
+  		which path link stores.
+  	rmf:
+  		rmf filename
+  		Unlink file. If there no more hardlinks, file will be deleted.
+  	smlk:
+  		smlk path
+  		Creates symlink to file.
+  	smlprint:
+  		smlprint filename
+  		Prints path stored in symlink.
+  	hrdlink:
+  		hrdlink filename
+  		Creates hard link. To remove hardlink use rmf.
+  	fstt:
+  		fstt filename
+  		Shows file statistics.
+  	chmd:
+  		chmd filename
+  		Change current file permissions.
+*/
+
 int checkArgsNumber(int argc, int requiered);
 char *getName(char* str);
 
@@ -85,7 +132,7 @@ int lsd(const char* filename) {
 	while ((entry = readdir(dir)) != NULL) {
 		printf("%s\n", entry->d_name);
 	}
-	closedir(dir);rm 
+	closedir(dir);
 	return 0;
 }
 
@@ -101,7 +148,6 @@ int crt(const char* filename) {
 	int fd = open(filename, O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 	if (fd < 0) {
 		perror("Cannot create file");
-		close(fd);
 		return -1;
 	}
 	close(fd);
@@ -112,14 +158,16 @@ int fprint(const char* filename) {
 	int fd = open(filename, O_RDONLY);
 	if (fd < 0) {
 		perror("Cannot open file");
-		close(fd);
 		return -1;
 	}
 	const int SIZE = 256;
 	char buf[SIZE];
 	int rd;
 	while (rd = read(fd, buf, SIZE)) {
-		write(1, buf, rd);
+		int wrt = write(1, buf, rd);
+		if (rd != wrt) {
+			return -1;
+		}
 	}
 	close(fd);
 	return 0;
@@ -146,12 +194,16 @@ int smlprint(const char* filename) {
 	const int SIZE = 256;
 	char buf[SIZE];
 	int rd = readlink(filename, buf, SIZE);
+	buf[rd] = '\0';
 	if (rd < 0) {
 		perror("Cannot read symlink");
 		return -1;
 	}
-	write(1,buf,rd);
-	write(1,"\n",1);
+
+	int wrt = write(1,buf,rd);
+	if (rd != wrt) {
+		return -1;
+	}
 	return 0;
 }
 
@@ -188,6 +240,8 @@ int fstt(const char* filename) {
 	   printf("\n\n");
 
 	   printf("The file %s a symbolic link\n", (S_ISLNK(fileStat.st_mode)) ? "is" : "is not");
+
+	   return 0;
 }
 
 int chmd(const char* filename, int mode) {
