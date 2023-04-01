@@ -189,4 +189,3 @@ void get_reverse_dir_filepath(char *buf, char *filepath) {
   reverse(begin, buf, rev_len);
   buf[rev_len] = 0;
 }
-
