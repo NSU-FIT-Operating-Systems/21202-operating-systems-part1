@@ -20,4 +20,4 @@ To build program use make
  		CANNOT_OPEN_FILE\
  		CANNOT_CREATE_REVERSE_FILE\
  		READ_ERROR\
- 		WRITE_ERROR\
+ 		WRITE_ERROR
