@@ -4,6 +4,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+#define BUFFER_SIZE 1000
+
 void reverse_string(char *str) {
     int len = strlen(str);
     for (int i = 0, j = len - 1; i < j; i++, j--) {
@@ -13,62 +15,69 @@ void reverse_string(char *str) {
     }
 }
 
-void reverse_file(char *filename) {
-    FILE *fp = fopen(filename, "r+");
-    if (fp == NULL) {
+void reverse_file(char *srcFilePath, char *dstFilePath) {
+    FILE *srcFile = fopen(srcFilePath, "rb");
+    FILE *dstFile = fopen(dstFilePath, "wb");
+    if (srcFp == NULL || dstFp == NULL) {
         perror("Error opening file");
         return;
     }
-    fseek(fp, 0, SEEK_END);
-    int fileSize = ftell(fp);
-    char *buffer = (char *) malloc(fileSize);
-    fseek(fp, 0, SEEK_SET);
-    fread(buffer, sizeof(char), fileSize, fp);
-    reverse_string(buffer);
-    fseek(fp, 0, SEEK_SET);
-    fwrite(buffer, sizeof(char), fileSize, fp);
-    fclose(fp);
+    
+    int fileSize = ftell();
+    char *buffer = (char *) malloc(BUFFER_SIZE);
+    size_t readNumber;
+    do {
+        readNumber = fread(buffer, 1, BUFFER_SIZE, srcFile);
+        if (readNumber < BUFFER_SIZE) {
+            buffer[readNumber] = '\0';
+        }
+        reverse_string(buffer);
+        fseek(dstFile, 0, SEEK_SET);
+        fwrite(buffer, 1, readNumber, dstFile);
+    } while (readNumber == BUFFER_SIZE);
+
+    fclose(srcFile);
+    fclose(dstFile);
     free(buffer);
 }
 
-void copy_directory(char *srcDir, char *dstDir) {
+void build_path(char *result, char *prefix, char *name) {
+    result = (char *) malloc(strlen(prefix) + strlen(name) + 2); 
+    sprintf(result, "%s/%s", prefix, name);
+}
+
+void copy(char *dst, char *src) {
+    dst = (char *) malloc(strlen(src) + 1);
+    strcpy(dst, src);
+}
+
+void copy_directory(char *prefix, char *srcDirName) {
     struct dirent *entry;
-    DIR *dir = opendir(srcDir);
+    char *dstDirName;
+    char *srcPath;
+    char *dstPath;
+
+    copy(dstDirName, srcDirName);
+    reverse_string(dstDirName);
+    build_path(srcPath, prefix, srcDirName); 
+    DIR *dir = opendir(srcPath);
     if (dir == NULL) {
         perror("Error opening directory");
         return;
     }
-    mkdir(dstDir, 0777);
+    
+    build_path(dstPath, prefix, dstDirName);
+    mkdir(dstPath, 777);
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_REG) {
-            char *srcFile = (char *) malloc(strlen(srcDir) + strlen(entry->d_name) + 2);
-            sprintf(srcFile, "%s/%s", srcDir, entry->d_name);   
-            char *dstFile = (char *) malloc(strlen(dstDir) + strlen(entry->d_name) + 2);
-            sprintf(dstFile, "%s/%s", dstDir, entry->d_name);
-            reverse_string(dstFile);
-            reverse_file(srcFile);
-            FILE *srcFp = fopen(srcFile, "rb");
-            FILE *dstFp = fopen(dstFile, "wb");
-            if (srcFp == NULL || dstFp == NULL) {
-                perror("Error opening file");
-                return;
-            }
-            fseek(srcFp, 0, SEEK_END);
-            int fileSize = ftell(srcFp);
-            char *buffer = (char *) malloc(fileSize);
-            fseek(srcFp, 0, SEEK_SET);
-            fread(buffer, sizeof(char), fileSize, srcFp);
-            for (int i = 0, j = fileSize - 1; i < j; i++, j--) {
-                char temp = buffer[i];
-                buffer[i] = buffer[j];
-                buffer[j] = temp;
-            }
-            fwrite(buffer, sizeof(char), fileSize, dstFp);
-            fclose(srcFp);
-            fclose(dstFp);
-            free(srcFile);
-            free(dstFile);
-            free(buffer);
+            char *srcFilePath;
+            char *dstFileName;
+            char *dstFilePath;
+            build_path(srcFilePath, srcPath, entry->d_name);
+            copy(dstFileName, entry->d_name);
+            reverse_string(dstFileName);
+            build_path(dstFilePath, dstPath, dstFileName);
+            reverse_file(srcFilePath, dstFilePath);
         } else if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             char *srcSubdir = (char *) malloc(strlen(srcDir) + strlen(entry->d_name) + 2);
             sprintf(srcSubdir, "%s/%s", srcDir, entry->d_name);
