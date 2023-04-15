@@ -2,13 +2,20 @@
 #include <stdint.h> 
 #include <stdlib.h> 
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 typedef struct {
-    uint64_t pfn : 54;
-    unsigned int soft_dirty : 1;
-    unsigned int file_page : 1;
-    unsigned int swapped : 1;
-    unsigned int present : 1;
+    // uint64_t pfn : 54;
+    // unsigned int soft_dirty : 1;
+    // unsigned int file_page : 1;
+    // unsigned int swapped : 1;
+    // unsigned int present : 1;
+    uint64_t pfn;
+    unsigned int soft_dirty;
+    unsigned int file_page;
+    unsigned int swapped;
+    unsigned int present;
 } PagemapEntry;
 
 int pagemap_get_entry(PagemapEntry *entry, int pagemap_fd, uintptr_t vaddr)
@@ -16,6 +23,7 @@ int pagemap_get_entry(PagemapEntry *entry, int pagemap_fd, uintptr_t vaddr)
     size_t nread;
     ssize_t ret;
     uint64_t data;
+
 
     nread = 0;
     while (nread < sizeof(data)) {
@@ -26,6 +34,7 @@ int pagemap_get_entry(PagemapEntry *entry, int pagemap_fd, uintptr_t vaddr)
             return -1;
         }
     }
+    printf("%lu\n", data & (((uint64_t)1 << 54) - 1));
     entry->pfn = data & (((uint64_t)1 << 54) - 1);
     entry->soft_dirty = (data >> 54) & 1;
     entry->file_page = (data >> 61) & 1;
@@ -51,11 +60,12 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 	PagemapEntry entry;
-	if (pagemap_get_entry(&entry, fd, atol(argv[2])) < 0) {
+	printf("%lx\n",(uint64_t) strtol(argv[2], NULL, 16));
+	if (pagemap_get_entry(&entry, fd, (uint64_t) strtol(argv[2], NULL, 16)) < 0) {
 		fprintf(stderr, "Something went wrong");
 		return -1;
 	}
-	printf("%d", entry->present);
+	// printf("%lu\n", entry.pfn);
 
 	return 0;
 }
