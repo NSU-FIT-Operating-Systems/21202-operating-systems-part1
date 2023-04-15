@@ -1,0 +1,9 @@
+gcc -c -fPIC libHello.c
+
+gcc -shared -o libHello.so libHello.o
+
+gcc -c hello.c
+
+gcc -o call_dynamic_hello hello.o -L./ -lHello
+
+export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH 

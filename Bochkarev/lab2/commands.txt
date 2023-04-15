@@ -1,0 +1,5 @@
+strace ./a.out
+
+strace  --trace=newfstatat  wget kernel.org
+
+strace -c wget kernel.org
