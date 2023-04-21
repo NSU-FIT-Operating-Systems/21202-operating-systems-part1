@@ -30,7 +30,7 @@ void generateReversedPath(char *srcPath, char **reversedPath) {
             }
             (*reversedPath)[i] = '/';
             j = i + 1;
-            mkdir(*reversedPath, 777);
+            mkdir(*reversedPath, 0777);
         }
     }
 }
@@ -42,7 +42,8 @@ void copy(char *src, char **dst) {
 
 void reverseFile(char *srcFilePath, char *reversedFilePath) {
     int srcFD = open(srcFilePath, O_RDONLY);
-    int reversedFD = open(reversedFilePath, O_CREAT | O_WRONLY);
+    mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH;
+    int reversedFD = open(reversedFilePath, O_CREAT | O_WRONLY, mode);
 
     if (srcFD == -1 || reversedFD == -1) {
         perror("Error opening file");
@@ -84,7 +85,7 @@ void reverseDir(char *srcPath) {
 
     char *reversedPath;
     generateReversedPath(srcPath, &reversedPath);
-    mkdir(reversedPath, 777);
+    mkdir(reversedPath, 0777);
     char *srcFilePath = (char *) calloc(strlen(srcPath) + BUFFER_SIZE + 2, sizeof(char));
     char *reversedFilePath = (char *) calloc(strlen(reversedPath) + BUFFER_SIZE + 2, sizeof(char));
     while ((entry = readdir(dir)) != NULL) {
@@ -111,8 +112,6 @@ void reverseDir(char *srcPath) {
 }
 
 
-
-
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <directory>\n", argv[0]);
@@ -124,4 +123,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
