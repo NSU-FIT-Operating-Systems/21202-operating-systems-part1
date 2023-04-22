@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE 3
+#define BUFFER_SIZE 1000
 
 
 void reverseString(char *str) {
@@ -19,7 +19,7 @@ void reverseString(char *str) {
     }
 }
 
-void generateReversedPath(char *srcPath, char **reversedPath) {
+int generateReversedPath(char *srcPath, char **reversedPath) {
     int srcPathLength = strlen(srcPath);
     *reversedPath = (char *) calloc(srcPathLength + 2, sizeof(char));
 
@@ -30,7 +30,13 @@ void generateReversedPath(char *srcPath, char **reversedPath) {
             }
             (*reversedPath)[i] = '/';
             j = i + 1;
-            mkdir(*reversedPath, 0777);
+            if (j == srcPathLength) {
+                return 0;
+            }
+            if (mkdir(*reversedPath, 0755) < 0) {
+                perror("Cannot create dirctory");
+                return -1;
+            }
         }
     }
 }
@@ -40,14 +46,24 @@ void copy(char *src, char **dst) {
     strcpy(*dst, src);
 }
 
-void reverseFile(char *srcFilePath, char *reversedFilePath) {
+int clear(int df1, int df2, char* buffer) {
+    free(buffer);
+    int c1res = close(df1); 
+    int c2res = close(df2); 
+    if (c1res < 0 || c2res < 0) {
+        perror("Cannot close file");
+        return -1;
+    }
+}
+
+int reverseFile(char *srcFilePath, char *reversedFilePath) {
     int srcFD = open(srcFilePath, O_RDONLY);
     mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH;
     int reversedFD = open(reversedFilePath, O_CREAT | O_WRONLY, mode);
 
     if (srcFD == -1 || reversedFD == -1) {
-        perror("Error opening file");
-        return;
+        perror("Cannot open file");
+        return -1;
     }
 
     int fileLength = lseek(srcFD, 0, SEEK_END);
@@ -60,32 +76,44 @@ void reverseFile(char *srcFilePath, char *reversedFilePath) {
         shift = fileLength - toRead - totalReadNumber;
         lseek(srcFD, shift, SEEK_SET);
         int readNumber = read(srcFD, buffer, toRead);
+        if (readNumber < 0) {
+            perror("Cannot read from file");
+            clear(srcFD, reversedFD, buffer);
+            return -1;
+        }
         totalReadNumber += readNumber;
         if (shift == 0) {
             buffer[readNumber] = '\0';
         }
         reverseString(buffer);
-        write(reversedFD, buffer, readNumber);
+        if (write(reversedFD, buffer, readNumber) < 0) {
+            perror("Cannot write to file");
+            clear(srcFD, reversedFD, buffer);
+            return -1;
+        } 
         toRead = BUFFER_SIZE;
     } while (shift != 0);
-
-    close(srcFD);
-    close(reversedFD);
-    free(buffer);
+    
+    if (clear(srcFD, reversedFD, buffer) < 0) {
+        return -1;
+    }
+    return 0;
 }
 
-void reverseDir(char *srcPath) {
+int reverseDir(char *srcPath) {
     struct dirent *entry;
 
     DIR *dir = opendir(srcPath);
     if (dir == NULL) {
-        perror("Error opening directory");
-        return;
+        perror("Cannot open directory");
+        return -1;
     }
 
     char *reversedPath;
-    generateReversedPath(srcPath, &reversedPath);
-    mkdir(reversedPath, 0777);
+    if (generateReversedPath(srcPath, &reversedPath) < 0) {
+        perror("Cannot create reversed path");
+        return -1;
+    }
     char *srcFilePath = (char *) calloc(strlen(srcPath) + BUFFER_SIZE + 2, sizeof(char));
     char *reversedFilePath = (char *) calloc(strlen(reversedPath) + BUFFER_SIZE + 2, sizeof(char));
     while ((entry = readdir(dir)) != NULL) {
@@ -98,17 +126,26 @@ void reverseDir(char *srcPath) {
             reverseString(fileName);
             sprintf(reversedFilePath, "%s%s\0", reversedPath, fileName);
 
-            reverseFile(srcFilePath, reversedFilePath);
+            if (reverseFile(srcFilePath, reversedFilePath) < 0) {
+                free(reversedPath);
+                free(srcFilePath);
+                free(reversedFilePath);
+                return -1;
+            }
         }
         else if (entry->d_type == DT_DIR) {
             fprintf(stdin, "Directory %s was detected and skipped\n", entry->d_name);
         }
     }
 
-    closedir(dir);
     free(reversedPath);
     free(srcFilePath);
     free(reversedFilePath);
+    if (closedir(dir) < 0) {
+        perror("Cannot close directory");
+        return -1;
+    }
+    return 0;
 }
 
 
@@ -119,7 +156,10 @@ int main(int argc, char *argv[]) {
     }
 
     char *srcPath = argv[1];
-    reverseDir(srcPath);
+    if (reverseDir(srcPath) < 0) {
+        perror("Cannot reverse directory");
+        return -1;
+    }
 
     return 0;
 }
