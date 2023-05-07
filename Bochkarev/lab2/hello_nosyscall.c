@@ -19,6 +19,6 @@ int print(const char* buf)
 
 int main()
 {
-    print("Hello world!\n");
-    return 0;
+	print("Hello world!\n");
+	return 0;
 }

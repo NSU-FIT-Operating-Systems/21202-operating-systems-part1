@@ -14,11 +14,10 @@ int print(const char* buf)
 		return -1;
 	}
 	return res;
-	
 }
 
 int main()
 {
-    print("Hello world!\n");
-    return 0;
+	print("Hello world!\n");
+	return 0;
 }
