@@ -46,7 +46,7 @@ int main()
 	if(pid > 0)
 	{
 		int* status;
-		int result = waitpid(pid, status, 0);
+		waitpid(pid, status, 0);
 		if(WIFEXITED(*status))
 		{
 			printf("Child process exited with %d status\n", *status);
@@ -57,7 +57,6 @@ int main()
 			printf("Child process did not exit successfully\n");
 			return 0;
 		}
-
 	}
 	return 0;
 }
