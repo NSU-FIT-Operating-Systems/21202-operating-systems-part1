@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <errno.h>
 
 void reverse(char* start, int size)
 {
@@ -52,7 +53,7 @@ int getByteNumber(int fd)
 	}	
 	if(lseek(fd, 0, SEEK_SET) == -1)
 	{
-		printf("Problems setting offset")
+		printf("Problems setting offset");
 		return -1;
 	}
 	return i;
@@ -78,7 +79,7 @@ int createNewReversedFile(char* fileName, char* path, char* startPath)
 	
 	if(fd1 == -1 || fd2 == -1)
 	{
-		printf("Could not open folders");
+		printf("Could not open folders\n");
 		return -1;
 	}
 
@@ -100,19 +101,26 @@ int createNewReversedFile(char* fileName, char* path, char* startPath)
 			printf("Problems reading");
 			return -1;
 		}
-		if(lseek(fd1, -2, SEEK_CUR) == -1)
-		{
-			printf("Problems setting offset");
-			return -1;
-		}
+		lseek(fd1, -2, SEEK_CUR);
 		if(write(fd2, &temp, 1) == -1)
 		{
 			printf("Problems writing");
 		}
 	}
-	if(close(fd1) == -1 || close(fd2) == -1)
+	
+	int check = 0;
+	if(close(fd1) == -1)
 	{
-		printf("Problems closing folders");
+		printf("Problems closing original folder\n");
+		check++;
+	}
+	if(close(fd2) == -1)
+	{
+		printf("Problems closing new folder\n");
+		check++;
+	}
+	if(check != 0)
+	{
 		return -1;
 	}
 	return 0;
@@ -121,7 +129,7 @@ int createNewReversedFile(char* fileName, char* path, char* startPath)
 int main()
 {
 	char path[1000];
-	printf("Enter path to folder:")
+	printf("Enter path to folder:");
 	if(scanf("%s", path) <= 0)
 	{
 		printf("Sorry, troubles with entering path\n");
@@ -131,10 +139,28 @@ int main()
 	char startPath[1000];
 	strcpy(startPath, path);
 	
+	DIR* dirCheck = opendir(path);
+	if(dirCheck)
+	{
+		closedir(dirCheck);
+	}
+	else if(ENOENT == errno)
+	{
+		printf("Directory does not exist\n");\
+		return 0;
+	}
+	else
+	{
+		printf("Failed to open dir\n");
+		return 0;
+	}
+	
 	getNewPath(path);
+	
 	if(mkdir(path, 0700) != 0)
 	{
-		printf("Problems with creating new folder\n")
+		printf("Problems with creating new folder\n");
+		return 0;
 	}
 	
 	DIR *d;
