@@ -77,9 +77,23 @@ int createNewReversedFile(char* fileName, char* path, char* startPath)
 	int fd1 = open(pathToOrig, O_RDONLY);
 	int fd2 = open(pathToNew, O_RDWR | O_CREAT, S_IRWXU);
 	
-	if(fd1 == -1 || fd2 == -1)
+	if(fd1 == -1 && fd2 == -1)
 	{
 		printf("Could not open folders\n");
+		return -1;
+	}
+	
+	if(fd2 == -1 && fd1 != -1)
+	{
+		close(fd1);
+		printf("Could not open new folder\n");
+		return -1;
+	}
+
+	if(fd2 != -1 && fd1 == -1)
+	{
+		close(fd2);
+		printf("Could not open original folder\n");
 		return -1;
 	}
 
@@ -89,6 +103,8 @@ int createNewReversedFile(char* fileName, char* path, char* startPath)
 	int byteNumber = getByteNumber(fd1);
 	if(byteNumber == -1)
 	{
+		close(fd1);
+		close(fd2);
 		return -1;
 	}
 	
@@ -99,12 +115,17 @@ int createNewReversedFile(char* fileName, char* path, char* startPath)
 		if(read(fd1, &temp, 1) == -1)
 		{
 			printf("Problems reading");
+			close(fd1);
+			close(fd2);
 			return -1;
 		}
 		lseek(fd1, -2, SEEK_CUR);
 		if(write(fd2, &temp, 1) == -1)
 		{
 			printf("Problems writing");
+			close(fd1);
+			close(fd2);
+			return -1;
 		}
 	}
 	
@@ -146,12 +167,14 @@ int main()
 	}
 	else if(ENOENT == errno)
 	{
-		printf("Directory does not exist\n");\
+		perror("Directory does not exist:");
+		printf("\n");
 		return 0;
 	}
 	else
 	{
-		printf("Failed to open dir\n");
+		perror("Failed to open dir:");
+		printf("\n");
 		return 0;
 	}
 	

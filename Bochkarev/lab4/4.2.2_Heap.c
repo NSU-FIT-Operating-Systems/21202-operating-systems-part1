@@ -17,9 +17,10 @@ void catchSigSegv(char* p, int block)
 	memset(&sa, '\0', sizeof(sa));
 	sa.sa_sigaction = &handler;
 	sa.sa_flags = SA_SIGINFO;
-	if(!sigaction(SIGSEGV, &sa, NULL))
+	if(sigaction(SIGSEGV, &sa, NULL) == -1)
 	{
-		printf("Sigaction failure\n");
+		perror("Sigaction failure: ");
+		printf("\n");
 		return;
 	}
 		
