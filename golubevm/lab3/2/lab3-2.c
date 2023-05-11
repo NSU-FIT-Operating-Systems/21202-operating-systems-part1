@@ -107,7 +107,11 @@ int main(int argc, char* argv[]) {
 	} else if (strcmp(fun, "fstt") == 0) {
 		res = fstt(arg1);
 	} else if (strcmp(fun, "chmd") == 0) {
-		res = chmd(arg1, atoi(argv[2]));
+		if (checkArgsNumber(argc, 2) < 0) {
+			fprintf(stderr, "Not enough arguments. Two args requiered\n");
+			return -1;
+		}
+		res = chmd(arg1, strtol(argv[2], NULL, 8));
 	}
 
 	return res;

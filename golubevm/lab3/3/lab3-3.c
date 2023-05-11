@@ -34,7 +34,7 @@ int pagemap_get_entry(PagemapEntry *entry, int pagemap_fd, uintptr_t vaddr)
             return -1;
         }
     }
-    printf("%lu\n", data & (((uint64_t)1 << 54) - 1));
+    printf("")
     entry->pfn = data & (((uint64_t)1 << 54) - 1);
     entry->soft_dirty = (data >> 54) & 1;
     entry->file_page = (data >> 61) & 1;
