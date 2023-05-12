@@ -1,19 +1,20 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <malloc.h>
 
-#define PAGE_SIZE 4096
+#define SIZE 1024*1024
 
-void incr_stack() {
-	char arr[PAGE_SIZE];
+void incr_heap() {
+	char *buffer = (char *)malloc(SIZE);
 	usleep(10000L);
-	incr_stack();
+	incr_heap();
 }
 
 int main(int argc, char const *argv[])
 {
 	printf("pid: %d\n", getpid());
 	sleep(15);
-	incr_stack();
+	incr_heap();
 	return 0;
 }
