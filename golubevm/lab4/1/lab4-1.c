@@ -19,6 +19,8 @@ char *global_pstr_f = "Hello, global pstr!";
 char global_array_not_inited_f[4096];
 char global_array_inited_f[] = "Hello, global inited array";
 
+//для проверки можно убрать слипы, необходимые для сдачи лабы
+
 int main(int argc, char* argv[]) {
 	printf("\npid: %d\n", getpid());
 	// sleep(15);
@@ -33,10 +35,9 @@ int main(int argc, char* argv[]) {
 	print_function_variables_and_their_addr();
 	uint64_t ptr = get_local_address();
 	printf("#address of local variable from function:  0x%lx\n", ptr);
-	// task_with_heap();
 	// sleep(300);
 	task_with_env();
-	// task_with_heap();
+	task_with_heap();
 	return 0;
 }
 
