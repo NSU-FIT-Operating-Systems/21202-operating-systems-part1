@@ -25,6 +25,7 @@ typedef enum {
   WRITE_ERROR
 } errors_t;
 
+
 typedef struct {
   int source_dir_fd;
   int dest_dir_fd;
@@ -36,33 +37,37 @@ void get_reverse_dir_filepath(char *buf, char *filepath);
 int reverse_file(reverse_entry_t *entry);
 void reverse(const char *str, char *rev, size_t len);
 
+void handle_close_fd(const int *fds, int size);
+
 int main(int argc, char *argv[]) {
   if (argc < 3) {
     fprintf(stderr, "%s\n", "No path passed via program arguments. Required two arguments: path/to/input/dir path/to/output/dir");
     return NOT_ENOUGH_ARGUMENTS;
   }
 
-  int source_dir_fd = open(argv[1], O_RDONLY | O_DIRECTORY);
+  int fds[3];
 
-  if (source_dir_fd < 0) {
+  fds[0] = open(argv[1], O_RDONLY | O_DIRECTORY);
+
+  if (fds[0] < 0) {
     perror("Cannot open specified directory");
     return CANNOT_OPEN_SPECIFIED_DIR;
   }
 
   DIR *source_dir;
-  source_dir = fdopendir(source_dir_fd);
+  source_dir = fdopendir(fds[0]);
 
   if (source_dir == NULL) {
     perror("Cannot open specified directory");
-    close(source_dir_fd);
+    handle_close_fd(fds, 1);
     return CANNOT_OPEN_SPECIFIED_DIR;
   }
 
-  int out_dir_fd = open(argv[2], O_RDONLY | O_DIRECTORY);
+  fds[1] = open(argv[2], O_RDONLY | O_DIRECTORY);
 
-  if (out_dir_fd < 0) {
+  if (fds[1] < 0) {
     perror("Cannot open output directory");
-    close(source_dir_fd);
+    handle_close_fd(fds, 1);
     closedir(source_dir);
     return CANNOT_OPEN_OUTPUT_DIR;
   }
@@ -70,21 +75,19 @@ int main(int argc, char *argv[]) {
   char reverse_dir_name[256];
   get_reverse_dir_filepath(reverse_dir_name, argv[1]);
 
-  if (mkdirat(out_dir_fd, reverse_dir_name, S_IRWXU | S_IRWXG | S_IRWXO) < 0) {
+  if (mkdirat(fds[1], reverse_dir_name, S_IRWXU | S_IRWXG | S_IRWXO) < 0) {
     perror("Cannot create reverse directory of specified directory");
-    close(source_dir_fd);
+    handle_close_fd(fds, 2);
     closedir(source_dir);
-    close(out_dir_fd);
     return CANNOT_CREATE_REVERSE_DIR;
   }
 
-  int dest_dir_fd = openat(out_dir_fd, reverse_dir_name, O_RDONLY | O_DIRECTORY);
+  fds[2] = openat(fds[1], reverse_dir_name, O_RDONLY | O_DIRECTORY);
 
-  if (dest_dir_fd < 0) {
+  if (fds[2] < 0) {
     perror("Reverse directory is created but cannot be opened");
-    close(source_dir_fd);
+    handle_close_fd(fds, 2);
     closedir(source_dir);
-    close(out_dir_fd);
     return CANNOT_OPEN_REVERSE_DIR;
   }
 
@@ -93,20 +96,18 @@ int main(int argc, char *argv[]) {
   while ((next = readdir(source_dir)) != NULL) {
     if (next->d_type == DT_REG) {
       reverse_entry_t entry;
-      entry.source_dir_fd = source_dir_fd;
-      entry.dest_dir_fd = dest_dir_fd;
+      entry.source_dir_fd = fds[0];
+      entry.dest_dir_fd = fds[2];
       entry.filename = next->d_name;
       program_result = reverse_file(&entry);
-      if (res) {
+      if (program_result) {
         break;
       }
     }
   }
 
-  close(source_dir_fd);
+  handle_close_fd(fds, 3);
   closedir(source_dir);
-  close(out_dir_fd);
-  close(dest_dir_fd);
 
   return program_result;
 }
@@ -185,4 +186,13 @@ void get_reverse_dir_filepath(char *buf, char *filepath) {
   }
   reverse(begin, buf, rev_len);
   buf[rev_len] = 0;
+}
+
+void handle_close_fd(const int *fds, int size) {
+  for (int i = 0; i < size; ++i) {
+    int res = close(fds[i]);
+    if (res < 0) {
+      perror("Error occured while closing file descriptor");
+    }
+  }
 }
