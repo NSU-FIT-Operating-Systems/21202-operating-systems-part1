@@ -1,3 +1,0 @@
-alexubu    44705  0.0  0.1  34124  8384 pts/0    T    фев10   0:00 vim -o hello_static.c hello_static.h
-alexubu    80157  0.0  0.0   2660  1004 pts/0    S+   12:30   0:00 ./hello.o
-alexubu    80271  0.0  0.0  17864  2392 pts/1    S+   12:34   0:00 grep --color=auto hello
