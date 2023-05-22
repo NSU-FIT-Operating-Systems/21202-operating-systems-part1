@@ -33,7 +33,7 @@ int main(int argc, char const *argv[])
 
 	struct sigaction sa;
 	sa.sa_handler = &sigsegv_handler;
-    sigaction(SIGSEGV, &sa, NULL);
+        sigaction(SIGSEGV, &sa, NULL);
 	// try_to_read_from_protected_memory(mapped_area + 10);
 	// try_to_write_to_protected_memory(mapped_area + 5);
 	unmap_pages(mapped_area + PAGE_SIZE * 4, PAGE_SIZE * 2);
