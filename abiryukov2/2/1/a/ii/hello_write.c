@@ -1,6 +1,7 @@
+#include <sys/syscall.h>
 #include <unistd.h>
 
 int main() {
-  write(STDOUT_FILENO, "Hello world\n", 13);
+  syscall(SYS_write, STDOUT_FILENO, "Hello world\n", 13);
   return 0;
 }

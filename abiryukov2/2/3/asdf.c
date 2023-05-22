@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     if (child_pid == 0) {
         /* Это код дочернего процесса */
-        ptrace(PTRACE_TRACEME, 0, NULL, NULL);  // позволяем родителю отслеживать наши системные вызовы
+        ptrace(PTRACE_TRACEME, 0, NULL, NULL);  // позволяем родителю отслеживать себя
         /*
         request=PTRACE_TRACEME - режим отладки
         pid=0 - применяем к себе
