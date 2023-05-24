@@ -24,13 +24,13 @@ void catchSigSegv(char* p, int block)
 		return;
 	}
 		
-	if(!mprotect(p, block * 10, PROT_NONE))
+	if(mprotect(p, block * 10, PROT_NONE) == -1)
 	{
 		printf("Mprotect failure\n");
 		return;
 	} 
-	//p[15] = 'a';
-	//char c = p[15];
+	p[15] = 'a';
+	char c = p[15];
 }
 
 void addHeap()
