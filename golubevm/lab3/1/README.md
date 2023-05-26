@@ -10,6 +10,7 @@ To build program use make
 
 **DESCRIPTION**\
 		Creates directory at OUTPUT location, if it does not already exists. Name of directory is reverse name of SOURCE directory. Created directory contains copies of all regular files from SOURCE directory with reversed names and data.
+		NOTE dir name cannot end with '/'.
 
 **ERRORS**\
 		NOT_ENOUGH_ARGUMENTS\

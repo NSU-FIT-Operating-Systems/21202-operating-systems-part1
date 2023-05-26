@@ -188,7 +188,7 @@ int fprint(const char *filename) {
   const int SIZE = 256;
   char buf[SIZE];
   int rd;
-  while (rd = read(fd, buf, SIZE)) {
+  while ((rd = read(fd, buf, SIZE))) {
     int wrt = write(1, buf, rd);
     if (rd != wrt) {
       return -1;
