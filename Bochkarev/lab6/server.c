@@ -33,8 +33,7 @@ int main()
 
     printf("data waiting...\n");
 
-    int clSocket = 0;
-    int addrLen = 0;
+    unsigned int addrLen = 0;
     int readCount = 0;
 
     struct sockaddr_in clAddr;
