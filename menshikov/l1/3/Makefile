@@ -10,7 +10,7 @@ EXECUTABLE=hello3
 SOURCES=hello3.c
 OBJECTS=$(SOURCES:.c=.o)
 
-all: run
+all: $(EXECUTABLE)
 
 dynamic: $(DYNAMIC_SRC)
 	$(CC) $(DYNFLAGS) $(DYNAMIC_SRC) -o $(DYNAMIC_OBJ)
