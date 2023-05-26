@@ -67,14 +67,26 @@ void reverse_copy(const char* src_dir) {
                 exit(EXIT_FAILURE);
             }
             for (int i = src_stat.st_size - 1; i >= 0; i--) {  // ну и переписваем файл, вот
-                fputc(buffer[i], dst_f);
+                if (fputc(buffer[i], dst_f) == EOF) {
+                    perror("fputc");
+                    exit(EXIT_FAILURE);
+                }
             }
-            fclose(src_f);
-            fclose(dst_f);
+            if (fclose(src_f) != 0) {
+                perror("fclose");
+                exit(EXIT_FAILURE);
+            }
+            if (fclose(dst_f) != 0) {
+                perror("fclose");
+                exit(EXIT_FAILURE);
+            }
         }
     }
 
-    closedir(src_d);
+    if (closedir(src_d) != 0) {
+        perror("closedir");
+        exit(EXIT_FAILURE);
+    }
 }
 
 int main(int argc, char* argv[]) {

@@ -1,6 +1,6 @@
 all:
 	gcc reverse_copy.c -o reverse_copy
-	./reverse_copy testdir
+	./reverse_copy.o testdir
 	rm -r testdir
-	./reverse_copy ridtset
+	./reverse_copy.o ridtset
 	rm -r ridtset
