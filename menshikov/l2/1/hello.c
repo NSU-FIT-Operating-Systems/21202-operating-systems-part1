@@ -1,4 +1,4 @@
-#include "stdio.h"
+#include "unistd.h"
 
 int main(){
 	write(1, "hello hi hehe", 13);
