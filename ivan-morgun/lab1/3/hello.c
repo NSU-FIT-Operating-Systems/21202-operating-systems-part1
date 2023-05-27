@@ -3,5 +3,5 @@
 
 int main(int argc, char* argv[]) {
     hello_from_dynamic_lib();
-	return 0;
+    return 0;
 }
