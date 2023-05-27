@@ -56,7 +56,7 @@ int main()
             close(sSocket);
             free(buf);
             perror("recieve failure: "); 
-    		exit(EXIT_FAILURE);  
+            exit(EXIT_FAILURE);  
         }
         buf[readCount] = '\0';
 
@@ -67,7 +67,7 @@ int main()
             close(sSocket);
             free(buf);
             perror("send failure: "); 
-    		exit(EXIT_FAILURE);  
+            exit(EXIT_FAILURE);  
         }
     }
 
