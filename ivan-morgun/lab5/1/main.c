@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 		show_tag(PARENT);
 		show_variables(&global_variable, &local_variable);
 
-		sleep(30);
+		sleep(20);
 
 		int status;
 		int res = wait(&status);
