@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 void mywrite(int fd, void *buf, size_t count) {
-    syscall(SYS_write, fd, buf, count);
+	syscall(SYS_write, fd, buf, count);
 }
 
 int main(int argc, char* argv[]) {
