@@ -214,7 +214,6 @@ int rmd(const char* dirname) {
 	return result;
 }
 
-// TODO: test creation of exist file
 int tch(const char* filename) {
 	int fd = open(filename, O_CREAT, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 	if (fd < 0) {
