@@ -73,6 +73,5 @@ int main()
 
     close(sSocket);
     free(buf);
-
     return EXIT_SUCCESS;
 }
