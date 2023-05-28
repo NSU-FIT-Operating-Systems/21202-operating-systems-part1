@@ -47,7 +47,9 @@ int main() {
         readCount = recvfrom(s, buf, 1024, 0, (struct sockaddr * ) & client, & client_address_size);
 
         if (readCount == -1) {
-            close(s);
+            if(close(s) < 0) {
+                printf("Could not close socket file\n");
+            }
             free(buf);
             perror("could not recieve msg");
             exit(4);
@@ -57,13 +59,17 @@ int main() {
         printf("Server recieved: %s\n\n", buf);
 
         if (sendto(s, buf, readCount, 0, (struct sockaddr * ) & client, client_address_size) < 0) {
-            close(s);
+            if (close(s) < 0) {
+                printf("Could not close socket file\n");   
+            }   
             free(buf);
             exit(4);
         }
         
         if (strcmp(buf, exitMessage) == 0) {
-            close(s);
+            if (close(s) < 0) {
+                printf("Could not close socket file\n");
+            }
             free(buf);
             return 0;
         }
