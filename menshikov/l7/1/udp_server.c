@@ -35,6 +35,8 @@ int main(int argc, char** argv) {
         close(server_socket_fd);
         return EXIT_FAILURE;
     }
+    fprintf(stdout, "Port set form environment variable <PORT>.\n");
+
     short port = (short) strtol(port_as_string, NULL, DECIMAL_SYSTEM);
 
     server_socket_addr.sin_family = AF_INET;
@@ -51,6 +53,7 @@ int main(int argc, char** argv) {
     char buffer[MAX_BUFFER_SIZE];
     memset(buffer, '\0', MAX_BUFFER_SIZE);
 
+    fprintf(stdout, "[SERVER] Started working:\n");
     while (true) {
         socklen_t address_length = sizeof(client_socket_addr);
         ssize_t received_bytes_number = recvfrom(server_socket_fd, buffer, MAX_BUFFER_SIZE - 1, DEFAULT,
@@ -67,7 +70,10 @@ int main(int argc, char** argv) {
                                            (struct sockaddr*) &client_socket_addr, (socklen_t) sizeof(client_socket_addr));
         if (sent_bytes_number < 0) {
             perror("Error during sendto()");
-            close(server_socket_fd);
+            if(close(server_socket_fd) != OK) {
+		perror("Error during close()");
+		return EXIT_FAILURE;
+	    }
             return EXIT_FAILURE;
         }
     }
@@ -77,5 +83,4 @@ int main(int argc, char** argv) {
         perror("Error during close()");
         return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
 }
