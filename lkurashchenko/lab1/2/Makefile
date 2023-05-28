@@ -1,26 +1,26 @@
-CC =gcc
+CC=gcc
 CFLAGS=-c -Wall
-CFILE=hello_static.c
-LIB=static.a
-OBJECT=hello.o
-MAIN=hello.c
+SOURCES=hello.c
+OBJECTS=$(SOURCES:.c=.o)
 
-compile: $(CFILE)
-	$(CC) $(CFLAGS) $(MAIN)
+all: lib run
 
-lib: compile
-	ar -rv $(LIB) $(OBJECT)
+lib: archive
 
-build: lib
-	$(CC) hello.o -o hello -L -lstatic
+archive: hello_static.o
+	ar -rv libhello_static.a hello_static.o
 
+hello_static.o: hello_static.c
+	$(CC) $(CFLAGS) hello_static.c
+
+hello: hello.o
+	$(CC) hello.o -o hello -L. -lhello_static
+	
+hello.o: hello.c
+	$(CC) $(CFLAGS) hello.c
+	
 clean:
-	rm -f *.o *.a hello 
-
-nm:build
-	$(info hello_static in hello:)
-	nm hello | grep hello_static
-
-run: build nm
-	$(info ========Executing========)
+	rm -rf *.o hello *.a
+	
+run: hello
 	./hello

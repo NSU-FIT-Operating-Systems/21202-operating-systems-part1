@@ -5,3 +5,5 @@ run:
 
 clean:
 	rm *.so hello
+
+all: run

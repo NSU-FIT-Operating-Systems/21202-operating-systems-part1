@@ -1,7 +1,7 @@
 CC =gcc
 CFLAGS=-c -Wall
 
-all:
+all: run
 
 compile: hello.c
 	$(CC) $(CFLAGS) hello.c
