@@ -2,12 +2,16 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netinet/in.h>
 
+const char* exitMessage = "shutdown\n";
+
 int main() {
-    int s, namelen, client_address_size;
+    int s, client_address_size;
+    unsigned int namelen;
     struct sockaddr_in client, server;
     char * buf = (char * ) malloc(1024 * sizeof(char));
 
@@ -57,9 +61,11 @@ int main() {
             free(buf);
             exit(4);
         }
-
+        
+        if (strcmp(buf, exitMessage) == 0) {
+            close(s);
+            free(buf);
+            return 0;
+        }
     }
-
-    close(s);
-    free(buf);
 }
