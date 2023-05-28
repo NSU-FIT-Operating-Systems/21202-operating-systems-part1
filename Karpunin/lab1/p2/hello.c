@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include "hello_from_static.h"
 
-
-
-
 void print_hello(void) {
 	printf("Hello from local!");
 }
