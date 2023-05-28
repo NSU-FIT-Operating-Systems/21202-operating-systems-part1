@@ -27,9 +27,9 @@ enum statuses execute_program() {
     global_int_var = OLD_VALUE;
     int local_int_var = OLD_VALUE;
 
-    fprintf(stdout, "Global var: address %p ; value %d\n", &global_int_var, global_int_var);
-    fprintf(stdout, "Local var: address %p ; value %d\n", &local_int_var, local_int_var);
-    fprintf(stdout, "Process ID: %d\n", getpid());
+    fprintf(stdout, "[PARENT] Global var: address %p ; value %d\n", &global_int_var, global_int_var);
+    fprintf(stdout, "[PARENT] Local var: address %p ; value %d\n", &local_int_var, local_int_var);
+    fprintf(stdout, "[PARENT] Process ID: %d\n", getpid());
     pid_t child_pid = fork();
     if (child_pid == SOMETHING_WENT_WRONG) {
         perror("Error during fork");
@@ -66,11 +66,11 @@ enum statuses execute_program() {
             return SOMETHING_WENT_WRONG;
         }
         if (WIFEXITED(exit_status)) {
-            fprintf(stdout, "Child process terminated with exit code %d\n", WEXITSTATUS(exit_status));
+            fprintf(stdout, "[PARENT] Child process terminated with exit code %d\n", WEXITSTATUS(exit_status));
         } else if (WIFSIGNALED(exit_status)) {
-            fprintf(stdout, "Child process terminated by signal %d\n", WTERMSIG(exit_status));
+            fprintf(stdout, "[PARENT] Child process terminated by signal %d\n", WTERMSIG(exit_status));
         } else {
-            fprintf(stderr, "Child process was stopped by another cause\n");
+            fprintf(stderr, "[PARENT] Child process was stopped by another cause\n");
             return SOMETHING_WENT_WRONG;
         }
     }
