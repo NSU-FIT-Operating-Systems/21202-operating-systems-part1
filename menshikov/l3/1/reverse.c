@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <errno.h>
 
 enum general_consts {
     NUMBER_OF_REQUIRED_ARGS = 2 /* program name and path to directory */
@@ -98,8 +99,19 @@ enum directory_errors create_dir_with_reversed_name(char* dir_path, char* dir_pa
 enum directory_errors is_this_dir_existing(char* dir_path) {
     DIR* opened_dir = opendir(dir_path);
     if (opened_dir == NULL) {
-        fprintf(stderr, "Directory does not exist!\n");
-        return DIRECTORY_DOESNT_EXIST;
+          if (errno == ENOENT) {
+            perror("Directory does not exist!\n");
+            return SOMETHING_WENT_WRONG;
+        } else if (errno == EACCES) {
+            perror("Permission denied!\n");
+            return SOMETHING_WENT_WRONG;
+        } else if (errno == ENOTDIR) {
+            perror("Not a directory!\n");
+            return SOMETHING_WENT_WRONG;
+        } else {
+            perror("Error opening directory: %s\n");
+            return SOMETHING_WENT_WRONG;
+        }
     }
 
     enum directory_errors closing_status = closedir(opened_dir);
@@ -203,8 +215,10 @@ enum statuses_of_copy copy_file_content(char* dir_path, char* file_name, char* d
     free(reversed_file_path);
 
     backward_copying_files(input_file, output_file);
-    fclose(input_file);
-    fclose(output_file);
+    if(fclose(input_file) == EOF || fclose(output_file) == EOF) {
+	perror("Error during fclose");
+	return SOMETHING_WENT_WRONG;
+    }
     return SUCCESSFULLY_COPIED;
 }
 
