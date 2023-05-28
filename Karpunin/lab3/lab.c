@@ -1,21 +1,12 @@
 #include <unistd.h>
-
 #include <limits.h>
-
 #include <dirent.h>
-
 #include <fcntl.h>
-
 #include <errno.h>
-
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <string.h>
-
 #include <sys/stat.h>
-
 
 void reverseString(char * string, int size) {
     char temp;
