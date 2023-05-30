@@ -24,22 +24,25 @@ void reverseString(char * string, int size) {
 
 void getNewPath(char * path) {
     char currentChar = '0';
-    size_t i = 0;
-    size_t j = 0;
+    
+    size_t pathIterator = 0;
+    size_t fileNamePosition = 0;
+    
     while (currentChar != '\0') {
-        currentChar = path[i++];
+        currentChar = path[pathIterator++];
         if (currentChar == '/') {
-            j = i;
+            fileNamePosition = pathIterator;
         }
     }
+    
     char name[PATH_MAX];
-    strcpy(name, & path[j]);
+    strcpy(name, & path[fileNamePosition]);
     reverseString(name, strlen(name));
-    strcpy( & path[j], name);
+    strcpy( & path[fileNamePosition], name);
 }
 
 size_t getByteAmount(int fileDesc) {
-    size_t i = 0;
+    size_t byteAmount = 0;
     char temp;
 
     int readFlag;
@@ -56,12 +59,13 @@ size_t getByteAmount(int fileDesc) {
         perror("Could not set offset");
         return -1;
     }
-    return i;
+    return byteAmount;
 }
 
 int createNewReversedFile(char * fileName, char * path, char * startPath) {
-    char originalFilePath[PATH_MAX];
-    char newFilePath[PATH_MAX];
+    
+    char originalFilePath[strlen(startPath) + strlen(fileName) + 2];
+    char newFilePath[strlen(path) + strlen(fileName) + 2];
 
     strcpy(originalFilePath, startPath);
     strcpy(originalFilePath + strlen(startPath), "/");
@@ -122,7 +126,10 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
         }
     }
 
-    lseek(fileDesc1, -1, SEEK_END);
+    if (lseek(fileDesc1, -1, SEEK_END) == -1) {
+        perror("Could not set offset\n");
+        return -1;
+    }
 
     while (i++ != byteAmount) {
         if (read(fileDesc1, & temp, 1) == -1) {
@@ -146,7 +153,14 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
             }
             return -1;
         }
-        lseek(fileDesc1, -2, SEEK_CUR);
+        
+        
+        if (lseek(fileDesc1, -2, SEEK_CUR) == -1) {
+            perror("Could not set offset");
+            return -1;
+        }
+        
+        
         if (write(fileDesc2, & temp, 1) == -1) {
             perror("Could not write into files");
             int fileDescFlag1 = close(fileDesc1);
@@ -190,7 +204,7 @@ int main() {
     printf("Folder path is: ");
     if (scanf("%s", path) <= 0) {
         perror("Could not read path\n");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     char startPath[PATH_MAX];
@@ -202,18 +216,18 @@ int main() {
     } else if (ENOENT == errno) {
         perror("Directory does not exist:");
         printf("\n");
-        return 0;
+        return EXIT_FAILURE;
     } else {
         perror("Failed to open dir:");
         printf("\n");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     getNewPath(path);
 
     if (mkdir(path, 0700) != 0) {
         perror("Could not create new folder\n");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     DIR * d;
@@ -221,8 +235,8 @@ int main() {
     d = opendir(startPath);
 
     if (d == NULL) {
-        printf("Could not open directory.");
-        return 0;
+        perror("Could not open directory\n");
+        return EXIT_FAILURE;
     }
     while ((dir = readdir(d)) != NULL) {
         if (dir -> d_type != DT_DIR) {
@@ -233,7 +247,8 @@ int main() {
     }
 
     if (closedir(d) != 0) {
-        perror("Could not close directory");
+        perror("Could not close directory\n");
+        return EXIT_FAILURE;
     }
 
     printf("Done!");
