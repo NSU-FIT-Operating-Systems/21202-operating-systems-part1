@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 
 void swap(char* a, char* b) {
     char tmp = *a;
@@ -26,6 +27,10 @@ int GetDirNamePos(char* path, int pathLength) {
 char* GetPathReverseDir(char* path) {
     int pathLength = strlen(path);
     char* reverseDirName = (char*)malloc(pathLength);
+    if (reverseDirName == NULL) {
+        perror("malloc()");
+        exit(-1);
+    }
     strcpy(reverseDirName, path);
 
     int dirNamePos = GetDirNamePos(path, pathLength);
@@ -38,7 +43,7 @@ char* GetPathReverseDir(char* path) {
 
 int GetSeporatorPossition(char* str, int length, char seporator) {
     int pos = 0;
-    for (pos; pos < length; ++pos) {
+    for (; pos < length; ++pos) {
         if (str[pos] == seporator) break;
     }
 
@@ -47,6 +52,10 @@ int GetSeporatorPossition(char* str, int length, char seporator) {
 
 char* GetReverseFileName(char* fileName, int lenFileName) {
     char* reverseFileName = (char*)malloc(lenFileName);
+    if (reverseFileName == NULL) {
+        perror("malloc()");
+        exit(-1);
+    }
     memcpy(reverseFileName, fileName, lenFileName);
 
     int seporPos = GetSeporatorPossition(fileName, lenFileName, '.');
@@ -60,6 +69,10 @@ char* GetReverseFileName(char* fileName, int lenFileName) {
 char* Concatenate(char* pathDir, int lenPathDir, char* fileName, int lenFileName) {
     int resultLength = lenPathDir + 1 + lenFileName;
     char* result = (char*)malloc(resultLength);
+    if (result == NULL) {
+        perror("malloc()");
+        exit(-1);
+    }
     memcpy(result, pathDir, lenPathDir);
     result[lenPathDir] = '/';
     memcpy(result + lenPathDir + 1, fileName, lenFileName);
@@ -67,7 +80,7 @@ char* Concatenate(char* pathDir, int lenPathDir, char* fileName, int lenFileName
     return result;
 }
 
-void MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
+int MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
     int lenFileName = 0;
     for (int i = 0; fileName[i] != '\0'; ++i) {
         lenFileName++;
@@ -79,7 +92,7 @@ void MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
     if ((origFile = fopen(pathOrigFile, "rb")) == NULL) {
         printf("Error: unable to open this file:\n%s\n", pathOrigFile);
         free(pathOrigFile);
-        return;
+        return 1;
     }
 
     char* reverseFileName = GetReverseFileName(fileName, lenFileName);
@@ -88,8 +101,11 @@ void MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
         printf("Error: unable to open this file:\n%s\n", pathReverseFile);
         free(pathOrigFile);
         free(pathReverseFile);
-        fclose(origFile);
-        return;
+        if (fclose(origFile) == EOF) {
+            printf("Error: unable to close file:\n%s\n", pathOrigFile);
+            return 1;
+        }
+        return 0;
     }
 
     fseek(origFile, -1, SEEK_END);
@@ -102,25 +118,38 @@ void MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
     free(pathOrigFile);
     free(reverseFileName);
     free(pathReverseFile);
-    fclose(origFile);
-    fclose(reverseFile);
+    if (fclose(origFile) == EOF) {
+        printf("Error: unable to close file:\n%s\n", pathOrigFile);
+        return 1;
+    }
+    if (fclose(reverseFile) == EOF) {
+        printf("Error: unable to close file:\n%s\n", pathReverseFile);
+        return 1;
+    }
+    return 0;
 }
 
-void ReverseRegularFiles(char* pathOrigDir, char* pathReverseDir) {
+int ReverseRegularFiles(char* pathOrigDir, char* pathReverseDir) {
     DIR* dp;
     if ((dp = opendir(pathOrigDir)) == NULL) {
         printf("Error: unable to open directory:\n%s\n", pathOrigDir);
-        return;
+        return 1;
     }
 
     struct dirent* entry;
     while ((entry = readdir(dp)) != NULL) {
         if (entry->d_type == DT_REG) {
-            MakeReverseFile(pathOrigDir, pathReverseDir, entry->d_name);
+            if (MakeReverseFile(pathOrigDir, pathReverseDir, entry->d_name) == 1){
+                printf("Error: unable to reverse file:\n%s\n", entry->d_name);
+                return 1;
+            }
         }
     }
-
-    closedir(dp);
+    if (closedir(dp) == EOF){
+        printf("Error: unable to close dir:\n%s\n", pathOrigDir);
+        return 1;
+    }
+    return 0;
 }
 
 int MakeReverseDir(char* pathOrigDir) {
@@ -128,16 +157,20 @@ int MakeReverseDir(char* pathOrigDir) {
     if (stat(pathOrigDir, &dirstat) == 0) {
         char* pathReverseDir = GetPathReverseDir(pathOrigDir);
         mkdir(pathReverseDir, dirstat.st_mode);
-        ReverseRegularFiles(pathOrigDir, pathReverseDir);
+        if (ReverseRegularFiles(pathOrigDir, pathReverseDir) == 1){
+            printf("Error: unable to reverse files in:\n%s\n", pathOrigDir);
+            return 1;
+        }
         return 0;
     }
+    printf("Error: dirstat:\n%s\n", pathOrigDir);
     return 1;
 }
 
 int main(int argc, char** argv) {
     int ret = MakeReverseDir(argv[1]);
-
     if (ret == 1) {
+        printf("Error: unable to reverse dir:\n%s\n", argv[1]);
         return 1;
     }
 
