@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Werror
+CFLAGS=-Wall -Werror -Wpedantic
 
 all: server client
 

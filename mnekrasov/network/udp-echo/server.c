@@ -33,8 +33,7 @@ int main(int argc, char **argv ) {
 
     printf("Waiting for data...\n");
 
-    int clientSocket = 0;
-    int addrLength = 0;
+    socklen_t addrLength = 0;
     int readCount = 0;
 
     struct sockaddr_in clientAddr;

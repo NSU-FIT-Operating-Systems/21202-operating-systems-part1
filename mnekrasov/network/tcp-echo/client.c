@@ -44,7 +44,8 @@ int main(int argc, char **argv) {
 
     write(clientSocket, buffer, strlen(buffer));
 
-    memset(buffer, 0, sizeof(buffer));
+
+    memset(buffer, 0, strlen(buffer));
 
     if (read(clientSocket, buffer, BUFFER_SIZE) == ERROR) {
         free(buffer);

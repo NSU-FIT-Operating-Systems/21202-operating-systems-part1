@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Werror
+CFLAGS=-Werror -Wall -Wpedantic
 
 all: exe
 

@@ -4,10 +4,44 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #define SUCCESS 0
 #define ERROR -1
 #define EQUAL 0
+
+#define NOTHING 0
+#define IS_FILE 1
+#define IS_DIRECTORY 2
+
+void releaseResources(void *toClose, int toCloseType, int toFreeCount, ...) {
+    if (toFreeCount < 0) {
+        printf("Invalid number of buffers to free");
+    } else {
+        va_list args;
+        va_start(args, toFreeCount);
+
+        for (int i = 0; i < toFreeCount; ++i) {
+            free(va_arg(args, char *));
+        }
+
+        va_end(args);
+    }
+
+    if ((toClose != NULL) && (toCloseType != NOTHING)) {
+        if (toCloseType == IS_FILE) {
+            if (fclose((FILE *) toClose) == ERROR) {
+                perror("fclose() failed");
+            }
+        } else if (toCloseType == IS_DIRECTORY) {
+            if (closedir((DIR *) toClose) == ERROR) {
+                perror("closedir() failed");
+            }
+        } else {
+            printf("Invalid type of item you want to close");
+        }
+    }
+}
 
 void reverseString(char *string) {
     int stringLen = strlen(string);
@@ -28,47 +62,38 @@ void reverseFile(const char *srcFilePath, const char *dstFilePath) {
 
     if (fseek(srcFile, 0, SEEK_END) == ERROR) {
         perror("fseek() failed");
-        if (fclose(srcFile) == ERROR) {
-            perror("fclose() failed");
-        }
+        releaseResources(srcFile, IS_FILE, 0);
         return;
     }
     long srcFileSize = ftell(srcFile);
     if (srcFileSize == ERROR) {
         perror("ftell() failed");
-        if (fclose(srcFile) == ERROR) {
-            perror("fclose() failed");
-        }
+        releaseResources(srcFile, IS_FILE, 0);
         return;
     }
 
     char *buffer = (char *) malloc(srcFileSize * sizeof(char));
     if (buffer == NULL) {
         perror("Impossible to allocate memory for buffer");
-        if (fclose(srcFile)) {
-            perror("fclose() failed");
-        }
+        releaseResources(srcFile, IS_FILE, 0);
         return;
     }
     if (fseek(srcFile, 0, SEEK_SET) == ERROR) {
         perror("fseek() failed");
-        if (fclose(srcFile) == ERROR) {
-            perror("fclose() failed");
-        }
-        free(buffer);
+        releaseResources(srcFile, IS_FILE, 1, buffer);
         return;
     }
     fread(buffer, sizeof(char), srcFileSize, srcFile);
     if (fclose(srcFile) == ERROR) {
         perror("fclose() failed");
-        free(buffer);
+        releaseResources(NULL, NOTHING, 1, buffer);
         return;
     }
 
     FILE *dstFile = fopen(dstFilePath, "wb");
     if (!dstFile) {
         perror("Impossible to open destination file for writing");
-        free(buffer);
+        releaseResources(NULL, NOTHING, 1, buffer);
         return;
     }
 
@@ -76,10 +101,7 @@ void reverseFile(const char *srcFilePath, const char *dstFilePath) {
         fwrite(&buffer[i], sizeof(char), 1, dstFile);
     }
 
-    free(buffer);
-    if (fclose(dstFile) == ERROR) {
-        perror("flose() failed");
-    }
+    releaseResources(dstFile, IS_FILE, 1, buffer);
 }
 
 void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
@@ -94,9 +116,7 @@ void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
                               S_IROTH | S_IWOTH | S_IXOTH;
     if (mkdir(dstDirPath, fullAccessRights) == ERROR) {
         perror("Impossible to create destination directory");
-        if (closedir(srcDir) == ERROR) {
-            perror("closedir() failed");
-        }
+        releaseResources(srcDir, IS_DIRECTORY, 0);
         return;
     }
 
@@ -108,9 +128,7 @@ void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
             char *dstFileName = (char *) malloc((srcFileNameLen + 1) * sizeof(char));
             if (dstFileName == NULL) {
                 perror("Impossible to allocate memory for dstFileName");
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 0);
                 return;
             }
             strncpy(dstFileName, srcFileName, srcFileNameLen);
@@ -119,10 +137,7 @@ void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
             char *srcFilePath = (char *) malloc((strlen(srcDirPath) + strlen(srcFileName) + 2) * sizeof(char));
             if (srcFilePath == NULL) {
                 perror("Impossible to allocate memory for srcFilePath");
-                free(dstFileName);
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 1, dstFileName);
                 return;
             }
             sprintf(srcFilePath, "%s/%s", srcDirPath, srcFileName);
@@ -130,34 +145,24 @@ void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
             char *dstFilePath = (char *) malloc((strlen(dstDirPath) + strlen(dstFileName) + 2) * sizeof(char));
             if (dstFilePath == NULL) {
                 perror("Impossible to allocate memory for dstFilePath");
-                free(dstFileName);
-                free(srcFilePath);
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 2, dstFileName, srcFileName);
                 return;
             }
             sprintf(dstFilePath, "%s/%s", dstDirPath, dstFileName);
 
             reverseFile(srcFilePath, dstFilePath);
 
-            free(dstFileName);
-            free(srcFilePath);
-            free(dstFilePath);
+            releaseResources(NULL, NOTHING, 3, dstFileName, srcFilePath, dstFilePath);
 
             if (errno != SUCCESS) {
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 0);
                 return;
             }
         } else if (srcEntry->d_type == DT_DIR && strcmp(srcEntry->d_name, ".") != EQUAL && strcmp(srcEntry->d_name, "..") != EQUAL) {
             char *srcSubdirPath = (char *) malloc((strlen(srcDirPath) + strlen(srcEntry->d_name) + 2) * sizeof(char));
             if (srcSubdirPath == NULL) {
                 perror("Impssible to allocate memory for srcSubdirPath");
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 0);
                 return;
             }
             sprintf(srcSubdirPath, "%s/%s", srcDirPath, srcEntry->d_name);
@@ -165,10 +170,7 @@ void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
             char *dstSubdirName = (char *) malloc((strlen(srcEntry->d_name + 1)) * sizeof(char));
             if (dstSubdirName == NULL) {
                 perror("Impossible to allocate memory for dstSubdirName");
-                free(srcSubdirPath);
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 1, srcSubdirPath);
                 return;
             }
             strncpy(dstSubdirName, srcEntry->d_name, strlen(srcEntry->d_name));
@@ -177,26 +179,18 @@ void reverseDirectory(const char *srcDirPath, const char *dstDirPath) {
             char *dstSubdirPath = (char *) malloc((strlen(dstDirPath) + strlen(dstSubdirName) + 2) * sizeof(char));
             if (dstSubdirPath == NULL) {
                 perror("Impossible to allocate memory for dstSubdirPath");
-                free(srcSubdirPath);
-                free(dstSubdirName);
-                if (closedir(srcDir) == ERROR) {
-                    perror("closedir() failed");
-                }
+                releaseResources(srcDir, IS_DIRECTORY, 2, srcSubdirPath, dstSubdirName);
                 return;
             }
             sprintf(dstSubdirPath, "%s/%s", dstDirPath, dstSubdirName);
 
             reverseDirectory(srcSubdirPath, dstSubdirPath);
 
-            free(srcSubdirPath);
-            free(dstSubdirName);
-            free(dstSubdirPath);
+            releaseResources(NULL, NOTHING, 3, srcSubdirPath, dstSubdirName, dstSubdirPath);
         }
     }
 
-    if (closedir(srcDir) == ERROR) {
-        perror("closedir() failed");
-    }
+    releaseResources(srcDir, IS_DIRECTORY, 0);
 }
 
 int main(int argc, char **argv) {
@@ -219,15 +213,14 @@ int main(int argc, char **argv) {
     char *dstDirPath = (char *) malloc((srcDirPathLen + 1) * sizeof(char));
     if (dstDirPath == NULL) {
         perror("Impossible to allocate memory for dstDirPath");
-        free(dstDirName);
+        releaseResources(NULL, NOTHING, 1, dstDirName);
         return EXIT_FAILURE;
     }
     sprintf(dstDirPath, "./%s", dstDirName);
 
     reverseDirectory(srcDirPath, dstDirPath);
 
-    free(dstDirName);
-    free(dstDirPath);
+    releaseResources(NULL, NOTHING, 2, dstDirName, dstDirPath);
 
     return errno == SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
 }
