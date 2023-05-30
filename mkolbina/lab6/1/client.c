@@ -7,6 +7,7 @@
 
 #define BUF_SIZE 1024
 
+
 int main(int argc, char *argv[]) {
     int client_sock, port_num, server_len, send_len, recv_len;
     char buffer[BUF_SIZE];
@@ -55,8 +56,6 @@ int main(int argc, char *argv[]) {
         printf("Получен ответ: %s\n", buffer);
     }
 
-    // Закрываем сокет
-    close(client_sock);
 
     return 0;
 }

@@ -7,18 +7,29 @@
 
 #define BUF_SIZE 1024
 
+void FreeBuf(char* buffer, int server_sock) {
+    free(buffer);
+    if (close(server_sock) == -1) {
+        printf("Ошибка закрытия сокета");
+        exit(1);
+    }
+}
+
 int main(int argc, char *argv[]) {
-    int server_sock, client_sock, port_num, client_len, recv_len;
+    int server_sock, port_num, recv_len;
+    unsigned int client_len;
     char *buffer = (char *) malloc(BUF_SIZE * sizeof(char));
+    if (buffer == NULL) {
+        printf("Ошибка выделения памяти");
+        exit(1);
+    }
     struct sockaddr_in server_addr, client_addr;
 
     // Создаем UDP-сокет
     server_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (server_sock < 0) {
         perror("Ошибка создания сокета");
-        free(buffer);
-        close(server_sock);
-
+        FreeBuf(buffer, server_sock);
         exit(1);
     }
 
@@ -32,8 +43,7 @@ int main(int argc, char *argv[]) {
     // Привязываем сокет к адресу и порту
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("Ошибка привязки сокета");
-        free(buffer);
-        close(server_sock);
+        FreeBuf(buffer, server_sock);
         exit(1);
     }
 
@@ -45,8 +55,7 @@ int main(int argc, char *argv[]) {
         recv_len = recvfrom(server_sock, buffer, BUF_SIZE, 0, (struct sockaddr *)&client_addr, &client_len);
         if (recv_len < 0) {
             perror("Ошибка приема сообщения");
-            free(buffer);
-            close(server_sock);
+            FreeBuf(buffer, server_sock);
             exit(1);
         }
 
@@ -57,15 +66,11 @@ int main(int argc, char *argv[]) {
         // Отправляем сообщение обратно клиенту
         if (sendto(server_sock, buffer, recv_len, 0, (struct sockaddr *)&client_addr, client_len) < 0) {
             perror("Ошибка отправки сообщения");
-            free(buffer);
-            close(server_sock);
+            FreeBuf(buffer, server_sock);
             exit(1);
         }
     }
 
-    // Закрываем сокет
-    close(server_sock);
-    free(buffer);
 
     return 0;
 }
