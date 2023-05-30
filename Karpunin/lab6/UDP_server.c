@@ -7,11 +7,11 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
-const char* exitMessage = "shutdown\n";
+const char* exitMessage = "server shutdown\n";
 
 int main() {
-    int s, client_address_size;
-    unsigned int namelen;
+    int s;
+    socklen_t namelen, client_address_size;
     struct sockaddr_in client, server;
     char * buf = (char * ) malloc(1024 * sizeof(char));
 
@@ -41,22 +41,22 @@ int main() {
 
     while (1) {
 
-        printf("Ready to recieve msg\n");
+        printf("Ready to receive msg\n");
 
         client_address_size = sizeof(client);
         readCount = recvfrom(s, buf, 1024, 0, (struct sockaddr * ) & client, & client_address_size);
 
         if (readCount == -1) {
-            if(close(s) < 0) {
-                printf("Could not close socket file\n");
+            perror("could not receive msg");
+            if (close(s) < 0) {
+                perror("Could not close socket file\n");
             }
-            free(buf);
-            perror("could not recieve msg");
+            free(buf); 
             exit(4);
         }
 
         buf[readCount] = '\0';
-        printf("Server recieved: %s\n\n", buf);
+        printf("Server received: %s\n\n", buf);
 
         if (sendto(s, buf, readCount, 0, (struct sockaddr * ) & client, client_address_size) < 0) {
             if (close(s) < 0) {

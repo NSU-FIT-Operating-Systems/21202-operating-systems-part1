@@ -7,7 +7,8 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
-const char* exitMessage = "shutdown\n";
+const char* serverExitMessage = "server shutdown\n";
+const char* clientExitMessage = "shutdown\n";
 
 int main(int argc, char** argv) {
     int s;
@@ -31,6 +32,9 @@ int main(int argc, char** argv) {
     server.sin_addr.s_addr = inet_addr(argv[1]);
 
     int readCount = 0;
+    
+    printf("Write <server shutdown> to shutdown the server\n");
+    printf("Write <shutdown> to shutdown the client\n");
 
     while (1) {
 
@@ -41,6 +45,15 @@ int main(int argc, char** argv) {
         fgets(buf, 1024, stdin);
         
         strcpy(localBuf, buf);
+        
+        
+        
+        if (strcmp(buf, clientExitMessage) == 0) {
+            printf("OK, shutting down the client\n");
+            free(buf);
+            free(localBuf);
+            exit(0);
+        }
 
         if (sendto(s, buf, strlen(buf), 0,
                 (struct sockaddr * ) & server, sizeof(server)) < 0) {
@@ -50,11 +63,11 @@ int main(int argc, char** argv) {
             exit(2);
         }
         
-        if (strcmp(buf, exitMessage) == 0) {
+        if (strcmp(buf, serverExitMessage) == 0) {
             printf("OK, shutting down the server\n");
             free(buf);
             free(localBuf);
-            return 0;
+            exit(0);
         }
 
         readCount = recvfrom(s, buf, 1024, 0, NULL, NULL);
@@ -67,7 +80,7 @@ int main(int argc, char** argv) {
         }
 
         buf[readCount] = '\0';
-        printf("Client recieved: %s\n", buf);
+        printf("Client received: %s\n", buf);
         
         if (strcmp(buf, localBuf) != 0) {
         	printf("Your message has been lost!");
