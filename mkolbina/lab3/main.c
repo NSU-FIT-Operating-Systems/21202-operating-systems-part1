@@ -99,12 +99,14 @@ int MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
     char* pathReverseFile = Concatenate(pathReverseDir, strlen(pathReverseDir), reverseFileName, lenFileName);
     if ((reverseFile = fopen(pathReverseFile, "wb")) == NULL) {
         printf("Error: unable to open this file:\n%s\n", pathReverseFile);
-        free(pathOrigFile);
-        free(pathReverseFile);
         if (fclose(origFile) == EOF) {
             printf("Error: unable to close file:\n%s\n", pathOrigFile);
+            free(pathOrigFile);
+            free(pathReverseFile);
             return 1;
         }
+        free(pathOrigFile);
+        free(pathReverseFile);
         return 0;
     }
 
@@ -115,17 +117,23 @@ int MakeReverseFile(char* pathOrigDir, char* pathReverseDir, char* fileName) {
         fputc(fgetc(origFile), reverseFile);
     }
 
-    free(pathOrigFile);
-    free(reverseFileName);
-    free(pathReverseFile);
     if (fclose(origFile) == EOF) {
         printf("Error: unable to close file:\n%s\n", pathOrigFile);
+        free(pathOrigFile);
+        free(reverseFileName);
+        free(pathReverseFile);
         return 1;
     }
     if (fclose(reverseFile) == EOF) {
         printf("Error: unable to close file:\n%s\n", pathReverseFile);
+        free(pathOrigFile);
+        free(reverseFileName);
+        free(pathReverseFile);
         return 1;
     }
+    free(pathOrigFile);
+    free(reverseFileName);
+    free(pathReverseFile);
     return 0;
 }
 
