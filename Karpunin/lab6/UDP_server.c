@@ -7,8 +7,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
-const char* exitMessage = "server shutdown\n";
-
 int main() {
     int s;
     socklen_t namelen, client_address_size;
@@ -16,7 +14,7 @@ int main() {
     char * buf = (char * ) malloc(1024 * sizeof(char));
 
     if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("socket()");
+        perror("Could not create socket");
         exit(1);
     }
 
@@ -25,7 +23,7 @@ int main() {
     server.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(s, (struct sockaddr * ) & server, sizeof(server)) < 0) {
-        perror("bind()");
+        perror("Could not bind socket");
         exit(2);
     }
 
@@ -59,19 +57,12 @@ int main() {
         printf("Server received: %s\n\n", buf);
 
         if (sendto(s, buf, readCount, 0, (struct sockaddr * ) & client, client_address_size) < 0) {
+            perror("Could not send the message\n");
             if (close(s) < 0) {
-                printf("Could not close socket file\n");   
+                perror("Could not close socket file\n");   
             }   
             free(buf);
             exit(4);
-        }
-        
-        if (strcmp(buf, exitMessage) == 0) {
-            if (close(s) < 0) {
-                printf("Could not close socket file\n");
-            }
-            free(buf);
-            return 0;
         }
     }
 }

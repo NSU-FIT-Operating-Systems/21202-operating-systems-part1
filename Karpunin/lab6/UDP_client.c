@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
-const char* serverExitMessage = "server shutdown\n";
 const char* clientExitMessage = "shutdown\n";
 
 int main(int argc, char** argv) {
@@ -33,7 +32,6 @@ int main(int argc, char** argv) {
 
     int readCount = 0;
     
-    printf("Write <server shutdown> to shutdown the server\n");
     printf("Write <shutdown> to shutdown the client\n");
 
     while (1) {
@@ -46,8 +44,6 @@ int main(int argc, char** argv) {
         
         strcpy(localBuf, buf);
         
-        
-        
         if (strcmp(buf, clientExitMessage) == 0) {
             printf("OK, shutting down the client\n");
             free(buf);
@@ -57,23 +53,19 @@ int main(int argc, char** argv) {
 
         if (sendto(s, buf, strlen(buf), 0,
                 (struct sockaddr * ) & server, sizeof(server)) < 0) {
-            perror("sendto()");
+            perror("Could not send the message\n");
             free(buf);
             free(localBuf);
             exit(2);
-        }
-        
-        if (strcmp(buf, serverExitMessage) == 0) {
-            printf("OK, shutting down the server\n");
-            free(buf);
-            free(localBuf);
-            exit(0);
         }
 
         readCount = recvfrom(s, buf, 1024, 0, NULL, NULL);
 
         if (readCount == -1) {
-            close(s);
+            perror("Could not reveive the message\n")
+            if (close(s) < 0) {
+                perror("Could not close the socket\n");
+            }
             free(buf);
             free(localBuf);
             exit(4);
