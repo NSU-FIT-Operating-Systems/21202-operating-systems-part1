@@ -30,14 +30,18 @@ int main(int argc, char **argv) {
     server_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (server_sock == ERROR) {
         perror("socket");
-        close(server_sock);
+        if (close(server_sock) == ERROR){
+            perror("close(server_sock)");
+        }
         return EXIT_FAILURE;
     }
 
     ret = bind(server_sock, (struct sockaddr *) &server_sock_addr, sock_addr_length);
     if (ret == ERROR) {
         perror("bind");
-        close(server_sock);
+        if (close(server_sock) == ERROR){
+            perror("close(server_sock)");
+        }
         return EXIT_FAILURE;
     }
 

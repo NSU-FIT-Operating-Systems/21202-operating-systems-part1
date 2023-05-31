@@ -24,7 +24,9 @@ int main(int argc, char **argv) {
     client_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (client_sock == ERROR) {
         perror("socket");
-        close(client_sock);
+        if (close(client_sock) == ERROR){
+            perror("close(client_sock)");
+        }
         return EXIT_FAILURE;
     }
 
@@ -34,7 +36,9 @@ int main(int argc, char **argv) {
     ret = inet_pton(AF_INET, SERVER_IP, &(server_sock_addr.sin_addr));
     if (ret == ERROR) {
         perror("inet_pton");
-        close(client_sock);
+        if (close(client_sock) == ERROR){
+            perror("close(client_sock)");
+        }
         return EXIT_FAILURE;
     }
     printf("Write 'DISCONNECT' in order to disconnect from server\n");
