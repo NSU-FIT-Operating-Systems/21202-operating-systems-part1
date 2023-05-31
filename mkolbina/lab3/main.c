@@ -28,7 +28,7 @@ char* GetPathReverseDir(char* path) {
     int pathLength = strlen(path);
     char* reverseDirName = (char*)malloc(pathLength);
     if (reverseDirName == NULL) {
-        perror("malloc()");
+        printf("Error: unable to malloc");
         exit(-1);
     }
     strcpy(reverseDirName, path);
@@ -53,7 +53,7 @@ int GetSeporatorPossition(char* str, int length, char seporator) {
 char* GetReverseFileName(char* fileName, int lenFileName) {
     char* reverseFileName = (char*)malloc(lenFileName);
     if (reverseFileName == NULL) {
-        perror("malloc()");
+        printf("Error: unable to malloc");
         exit(-1);
     }
     memcpy(reverseFileName, fileName, lenFileName);
@@ -70,7 +70,7 @@ char* Concatenate(char* pathDir, int lenPathDir, char* fileName, int lenFileName
     int resultLength = lenPathDir + 1 + lenFileName;
     char* result = (char*)malloc(resultLength);
     if (result == NULL) {
-        perror("malloc()");
+        printf("Error: unable to malloc");
         exit(-1);
     }
     memcpy(result, pathDir, lenPathDir);
@@ -154,17 +154,17 @@ int ReverseRegularFiles(char* pathOrigDir, char* pathReverseDir) {
 
 int MakeReverseDir(char* pathOrigDir) {
     struct stat dirstat;
-    if (stat(pathOrigDir, &dirstat) == 0) {
-        char* pathReverseDir = GetPathReverseDir(pathOrigDir);
-        mkdir(pathReverseDir, dirstat.st_mode);
-        if (ReverseRegularFiles(pathOrigDir, pathReverseDir) == 1){
-            printf("Error: unable to reverse files in:\n%s\n", pathOrigDir);
-            return 1;
-        }
-        return 0;
+    if (stat(pathOrigDir, &dirstat) == -1) {
+        printf("Error: dirstat:\n%s\n", pathOrigDir);
+        return 1;
     }
-    printf("Error: dirstat:\n%s\n", pathOrigDir);
-    return 1;
+    char* pathReverseDir = GetPathReverseDir(pathOrigDir);
+    mkdir(pathReverseDir, dirstat.st_mode);
+    if (ReverseRegularFiles(pathOrigDir, pathReverseDir) == 1) {
+        printf("Error: unable to reverse files in:\n%s\n", pathOrigDir);
+        return 1;
+    }
+    return 0;
 }
 
 int main(int argc, char** argv) {
