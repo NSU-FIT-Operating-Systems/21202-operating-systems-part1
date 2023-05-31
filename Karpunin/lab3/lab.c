@@ -48,7 +48,7 @@ size_t getByteAmount(int fileDesc) {
     int readFlag;
 
     while ((readFlag = read(fileDesc, & temp, 1)) == 1) {
-        i++;
+        byteAmount++;
     }
 
     if (readFlag < 0) {
@@ -105,7 +105,7 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
     char temp;
     size_t i = 0;
 
-    int byteAmount = getByteAmount(fileDesc1);
+    size_t byteAmount = getByteAmount(fileDesc1);
     if (byteAmount == -1) {
         int fileDescFlag1 = close(fileDesc1);
         int fileDescFlag2 = close(fileDesc2);
@@ -156,8 +156,10 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
         
         
         if (lseek(fileDesc1, -2, SEEK_CUR) == -1) {
-            perror("Could not set offset");
-            return -1;
+            if (i < byteAmount) {
+                perror("Could not set offset");
+                return -1;
+            }
         }
         
         
