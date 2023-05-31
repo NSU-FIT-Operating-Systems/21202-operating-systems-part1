@@ -4,9 +4,9 @@ msg:
 	.ascii "Hello world from syscall\n"
 	len = . - msg;
 .text
-	.global _start
+	.global main
 
-_start:
+main:
 	movq $1, %rax
 	movq $1, %rdi
 	movq $msg, %rsi
