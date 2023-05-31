@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     }
 
     if (close(server_sock) == ERROR) {
-        perror(" close(server_sock)");
+        perror("close(server_sock)");
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
