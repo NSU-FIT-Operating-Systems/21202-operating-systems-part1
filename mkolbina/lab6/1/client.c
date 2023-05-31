@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #define BUF_SIZE 1024
+#define EXIT_WORD "Выход"
 
 
 int main(int argc, char *argv[]) {
@@ -43,6 +44,10 @@ int main(int argc, char *argv[]) {
         if (send_len < 0) {
             perror("Ошибка отправки сообщения");
             exit(1);
+        }
+        if (strncmp(buffer, EXIT_WORD, 5) == 0) {
+            printf("Завершение работы клиента\n");
+            break;
         }
 
         // Принимаем ответ от сервера

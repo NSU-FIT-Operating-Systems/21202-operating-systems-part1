@@ -5,12 +5,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#define EXIT_WORD "Выход"
 #define BUF_SIZE 1024
 
 void FreeBuf(char* buffer, int server_sock) {
     free(buffer);
     if (close(server_sock) == -1) {
-        printf("Ошибка закрытия сокета");
+        perror("Ошибка закрытия сокета");
         exit(1);
     }
 }
@@ -20,7 +21,7 @@ int main(int argc, char *argv[]) {
     unsigned int client_len;
     char *buffer = (char *) malloc(BUF_SIZE * sizeof(char));
     if (buffer == NULL) {
-        printf("Ошибка выделения памяти");
+        perror("Ошибка выделения памяти");
         exit(1);
     }
     struct sockaddr_in server_addr, client_addr;
@@ -57,6 +58,11 @@ int main(int argc, char *argv[]) {
             perror("Ошибка приема сообщения");
             FreeBuf(buffer, server_sock);
             exit(1);
+        }
+        if (strncmp(buffer, EXIT_WORD, 5) == 0) {
+            printf("Завершение работы сервера\n");
+            FreeBuf(buffer, server_sock);
+            break;
         }
 
         // Выводим информацию о клиенте и принятом сообщении
