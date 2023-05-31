@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#define CLIENT_DISCONNECT "DISCONNECT"
 #define ERROR           (-1)
 #define BUFFER_SIZE     1024
 #define SERVER_PORT     5000
@@ -36,21 +37,23 @@ int main(int argc, char **argv) {
         close(client_sock);
         return EXIT_FAILURE;
     }
-
+    printf("Write 'DISCONNECT' in order to disconnect from server\n");
     while (true) {
         printf("Enter message: ");
         fgets(buffer, BUFFER_SIZE, stdin);
         if (buffer[strlen(buffer) - 1] == '\n') {
             buffer[strlen(buffer) - 1] = '\0';
         }
-
         ret = sendto(client_sock, buffer, strlen(buffer), 0, (struct sockaddr *) &server_sock_addr,
                      sock_addr_length);
         if (ret == ERROR) {
             perror("sendto");
             continue;
         }
-
+        if (strncmp(buffer, CLIENT_DISCONNECT,10) == 0){
+            printf("Client disconnected\n");
+            break;
+        }
         ret = recvfrom(client_sock, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &server_sock_addr,
                        &sock_addr_length);
         if (ret == ERROR) {
