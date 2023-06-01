@@ -215,9 +215,20 @@ enum statuses_of_copy copy_file_content(char* dir_path, char* file_name, char* d
     free(reversed_file_path);
 
     backward_copying_files(input_file, output_file);
-    if(fclose(input_file) == EOF || fclose(output_file) == EOF) {
-	perror("Error during fclose");
-	return SOMETHING_WENT_WRONG;
+    bool error_occurred = false;
+
+    if (fclose(input_file) == EOF) {
+        perror("Error during fclose (input_file)");
+        error_occurred = true;
+    }
+
+    if (fclose(output_file) == EOF) {
+        perror("Error during fclose (output_file)");
+        error_occurred = true;
+    }
+
+    if (error_occurred) {
+        return SOMETHING_WENT_WRONG;
     }
     return SUCCESSFULLY_COPIED;
 }
