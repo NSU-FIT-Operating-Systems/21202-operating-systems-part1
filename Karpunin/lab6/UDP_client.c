@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
         readCount = recvfrom(s, buf, 1024, 0, NULL, NULL);
 
         if (readCount == -1) {
-            perror("Could not reveive the message\n")
+            perror("Could not reveive the message\n");
             if (close(s) < 0) {
                 perror("Could not close the socket\n");
             }
