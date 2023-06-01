@@ -163,7 +163,7 @@ int ReverseRegularFiles(char* pathOrigDir, char* pathReverseDir) {
 int MakeReverseDir(char* pathOrigDir) {
     struct stat dirstat;
     if (stat(pathOrigDir, &dirstat) == -1) {
-        printf("Error: dirstat:\n%s\n", pathOrigDir);
+        printf("Error: dirstat. Please, write ./main [DIRECTORY TO REVERSE]\n");
         return 1;
     }
     char* pathReverseDir = GetPathReverseDir(pathOrigDir);
@@ -178,7 +178,7 @@ int MakeReverseDir(char* pathOrigDir) {
 int main(int argc, char** argv) {
     int ret = MakeReverseDir(argv[1]);
     if (ret == 1) {
-        printf("Error: unable to reverse dir:\n%s\n", argv[1]);
+        printf("Error: unable to reverse dir. Please, write ./main [DIRECTORY TO REVERSE]\n");
         return 1;
     }
 
