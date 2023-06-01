@@ -24,12 +24,6 @@ int reverse_dir(const char *dir_path, const char *new_dir_path);
 
 int check_dir_entry(const struct dirent *dir_entry, const char *dest_working_dir, const char *src_working_dir);
 
-long get_size(FILE *file_stream);
-
-int read_file(char *buffer, size_t size, FILE *in_stream);
-
-int write_file(const char *buffer, size_t size, FILE *in_stream);
-
 int reverse_file(const char *file_path, const char *reverse_file_path);
 
 
@@ -81,7 +75,7 @@ int join_file_path(const char *working_dir, const char *file_name, char *file_pa
     }
 
     if (result != file_path_length + 1) {
-        fprintf(stderr, "snprintf insufficient length");
+        perror("snprintf insufficient length");
         return ERROR;
     }
 
@@ -129,13 +123,16 @@ int reverse_dir(const char *dir_path, const char *new_dir_path) {
     while (dir_entry != NULL) {
         result = check_dir_entry(dir_entry, dir_path, new_dir_path);
         if (result == ERROR) {
-            closedir(dir_stream);
+            perror("check_dir_entry");
+            if (closedir(dir_stream) == -1) {
+                perror("closedir(dir_stream)");
+            }
             return ERROR;
         }
 
         dir_entry = readdir(dir_stream);
     }
-    if (closedir(dir_stream)) {
+    if (closedir(dir_stream) == EOF) {
         return ERROR;
     }
     return SUCCESS;
@@ -165,71 +162,8 @@ int check_dir_entry(const struct dirent *dir_entry, const char *dest_working_dir
     return result;
 }
 
-long get_size(FILE *file_stream) {
-    int result = SUCCESS;
-    long begin_pos = 0;
-    long size = 0;
-
-    begin_pos = ftell(file_stream);
-    if (begin_pos == ERROR)
-        return ERROR;
-
-    result = fseek(file_stream, 0, SEEK_END);
-    if (result == ERROR)
-        return ERROR;
-
-    size = ftell(file_stream);
-    if (size == ERROR)
-        return ERROR;
-
-    result = fseek(file_stream, begin_pos, SEEK_SET);
-    if (result == ERROR)
-        return ERROR;
-
-    return size;
-}
-
-int read_file(char *buffer, size_t size, FILE *in_stream) {
-    int result = SUCCESS;
-    size_t read = 0;
-    size_t total_read = 0;
-
-    while (total_read < size) {
-        read = fread(buffer + total_read, sizeof(char), size - total_read, in_stream);
-
-        result = ferror(in_stream);
-        if (read == 0 && result != SUCCESS)
-            return ERROR;
-
-        total_read += read;
-    }
-
-    return SUCCESS;
-}
-
-int write_file(const char *buffer, size_t size, FILE *in_stream) {
-    int result = SUCCESS;
-    size_t written = 0;
-    size_t total_written = 0;
-
-    while (total_written < size) {
-        written = fwrite(buffer + total_written, sizeof(char), size - total_written, in_stream);
-
-        result = ferror(in_stream);
-        if (written == 0 && result != SUCCESS)
-            return ERROR;
-
-        total_written += written;
-    }
-
-    return SUCCESS;
-}
-
 int reverse_file(const char *file_path, const char *reverse_file_path) {
     int result = SUCCESS;
-    size_t reversed = 0;
-    size_t file_size = 0;
-    char buffer[BUFFER_MAX + 1] = {};
     FILE *src_file_stream = NULL;
     FILE *dest_file_stream = NULL;
 
@@ -242,47 +176,40 @@ int reverse_file(const char *file_path, const char *reverse_file_path) {
     dest_file_stream = fopen(reverse_file_path, "w");
     if (dest_file_stream == NULL) {
         perror(reverse_file_path);
-        fclose(src_file_stream);
+        if (fclose(src_file_stream) == EOF) {
+            perror("fclose");
+        }
         return ERROR;
     }
 
-    file_size = get_size(src_file_stream);
-    if (file_size == ERROR) {
-        perror(file_path);
-        fclose(dest_file_stream);
-        fclose(src_file_stream);
+    if (fseek(src_file_stream, -1, SEEK_END) != 0) {
+        perror("fseek seek_end");
         return ERROR;
     }
 
-    while (reversed != file_size) {
-        long offset = max(0, file_size - reversed - BUFFER_MAX);
-        size_t count = file_size - offset - reversed;
-
-        result = fseek(src_file_stream, offset, SEEK_SET);
-        if (result == ERROR) {
-            perror(file_path);
-            break;
+    long size = ftell(src_file_stream);
+    if (size == -1L) {
+        perror("ftell");
+    }
+    for (long current_pos = size; current_pos >= 0; --current_pos) {
+        if (fseek(src_file_stream, current_pos, SEEK_SET) != 0) {
+            perror("fseek current_pos");
+            return ERROR;
         }
-
-        memset(buffer, 0, BUFFER_MAX);
-        result = read_file(buffer, count, src_file_stream);
-        if (result == ERROR) {
-            perror(file_path);
-            break;
+        if (fputc(fgetc(src_file_stream), dest_file_stream) == EOF) {
+            perror("fputc current_pos");
+            return ERROR;
         }
-
-        reverse_string(buffer, buffer, count);
-        result = write_file(buffer, count, dest_file_stream);
-        if (result == ERROR) {
-            perror(reverse_file_path);
-            break;
-        }
-
-        reversed += count;
     }
 
-    fclose(dest_file_stream);
-    fclose(src_file_stream);
+    if (fclose(dest_file_stream) == EOF) {
+        perror("fclose");
+        return ERROR;
+    }
+    if (fclose(src_file_stream) == EOF) {
+        perror("fclose");
+        return ERROR;
+    }
     return result;
 }
 
