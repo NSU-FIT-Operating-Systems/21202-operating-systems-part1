@@ -8,6 +8,27 @@
 #include <string.h>
 #include <sys/stat.h>
 
+
+int closeFileDescs(int fd1, int fd2) {
+    int fileDescFlag1 = close(fd1);
+    int fileDescFlag2 = close(fd2);
+
+    if (fileDescFlag1 < 0 && fileDescFlag2 < 0) {
+        perror("Could not close both files\n");
+        return -1;
+    }
+
+    if (fileDescFlag1 < 0) {
+        perror("Could not close original file\n");
+        return -1;
+    }
+
+    if (fileDescFlag2 < 0) {
+        perror("Could not close new file\n");
+        return -1;
+    }
+}
+
 void reverseString(char * string, int size) {
     char temp;
     size_t i = 0;
@@ -52,11 +73,12 @@ size_t getByteAmount(int fileDesc) {
     }
 
     if (readFlag < 0) {
+        perror("Could not read the file\n");
         return -1;
     }
 
     if (lseek(fileDesc, 0, SEEK_SET) == -1) {
-        perror("Could not set offset");
+        perror("Could not set offset\n");
         return -1;
     }
     return byteAmount;
@@ -107,23 +129,7 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
 
     size_t byteAmount = getByteAmount(fileDesc1);
     if (byteAmount == -1) {
-        int fileDescFlag1 = close(fileDesc1);
-        int fileDescFlag2 = close(fileDesc2);
-
-        if (fileDescFlag1 < 0 && fileDescFlag2 < 0) {
-            printf("Could not close both files\n");
-            return -1;
-        }
-
-        if (fileDescFlag1 < 0) {
-            printf("Could not close original file\n");
-            return -1;
-        }
-
-        if (fileDescFlag2 < 0) {
-            printf("Could not close new file\n");
-            return -1;
-        }
+        closeFileDescs(fileDesc1, fileDesc2);
     }
 
     if (lseek(fileDesc1, -1, SEEK_END) == -1) {
@@ -134,23 +140,7 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
     while (i++ != byteAmount) {
         if (read(fileDesc1, & temp, 1) == -1) {
             perror("Could not read files");
-            int fileDescFlag1 = close(fileDesc1);
-            int fileDescFlag2 = close(fileDesc2);
-
-            if (fileDescFlag1 < 0 && fileDescFlag2 < 0) {
-                printf("Could not close both files\n");
-                return -1;
-            }
-
-            if (fileDescFlag1 < 0) {
-                printf("Could not close original file\n");
-                return -1;
-            }
-
-            if (fileDescFlag2 < 0) {
-                printf("Could not close new file\n");
-                return -1;
-            }
+            closeFileDescs(fileDesc1, fileDesc2);
             return -1;
         }
         
@@ -165,23 +155,7 @@ int createNewReversedFile(char * fileName, char * path, char * startPath) {
         
         if (write(fileDesc2, & temp, 1) == -1) {
             perror("Could not write into files");
-            int fileDescFlag1 = close(fileDesc1);
-            int fileDescFlag2 = close(fileDesc2);
-
-            if (fileDescFlag1 < 0 && fileDescFlag2 < 0) {
-                printf("Could not close both files\n");
-                return -1;
-            }
-
-            if (fileDescFlag1 < 0) {
-                printf("Could not close original file\n");
-                return -1;
-            }
-
-            if (fileDescFlag2 < 0) {
-                printf("Could not close new file\n");
-                return -1;
-            }
+            closeFileDescs(fileDesc1, fileDesc2);
             return -1;
         }
     }
@@ -215,12 +189,8 @@ int main() {
     DIR * directory = opendir(path);
     if (directory) {
         closedir(directory);
-    } else if (ENOENT == errno) {
-        perror("Directory does not exist:");
-        printf("\n");
-        return EXIT_FAILURE;
     } else {
-        perror("Failed to open dir:");
+        perror("Failed to open dir");
         printf("\n");
         return EXIT_FAILURE;
     }
