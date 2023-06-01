@@ -70,11 +70,15 @@ int main(int argc, char** argv) {
                                            (struct sockaddr*) &client_socket_addr, (socklen_t) sizeof(client_socket_addr));
         if (sent_bytes_number < 0) {
             perror("Error during sendto()");
-            if(close(server_socket_fd) != OK) {
-		perror("Error during close()");
-		return EXIT_FAILURE;
+            if (close(server_socket_fd) != OK) {
+                perror("Error during close()");
+
 	    }
             return EXIT_FAILURE;
+        }
+
+        if (strcmp(buffer, "quit") == 0) {
+            break;
         }
     }
 
@@ -83,4 +87,5 @@ int main(int argc, char** argv) {
         perror("Error during close()");
         return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
 }
